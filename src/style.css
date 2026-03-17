@@ -1,0 +1,328 @@
+/* 1) tu fuente (ok) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* 2) Tailwind v4: una sola línea */
+@import 'tailwindcss';
+
+/* Force class-based dark mode */
+@variant dark (&:where(.dark, .dark *));
+
+/* Calendar Picker Indicator - Dark Mode Fix */
+.dark ::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* Select Options - Dark Mode Fix */
+.dark select option {
+  background-color: #292929; /* dark-igp-black-950 or similar */
+  color: white;
+}
+
+/* 3) (opcional) define tu tema aquí (v4 way) */
+@theme {
+  /* ================ FONTS ================ */
+  --font-sans:
+    'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
+
+  /* ================ SCREENS (breakpoints) ================ */
+  /* Equivalentes a tu screens v3 */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1200px;
+  --breakpoint-2xl: 1400px;
+  --breakpoint-3xl: 2080px;
+  --breakpoint-4xl: 2320px;
+
+  /* ================ COLORES IGP ================ */
+  /* Semáforo */
+  --color-igp-semaforo-50: #04bc00;
+  --color-igp-semaforo-100: #bc9300;
+  --color-igp-semaforo-200: #fd6f08;
+  --color-igp-semaforo-300: #333333;
+  --color-igp-semaforo-400: #48e1ff;
+  --color-igp-semaforo-500: #ff0000;
+  --color-igp-semaforo-600: #fff3cd;
+  --color-igp-semaforo-700: #ffcdcd4d;
+  --color-igp-semaforo: #bc9300;
+  /* DEFAULT */
+
+  /* White */
+  --color-igp-white-50: #ffffff;
+  --color-igp-white-100: #efefef;
+  --color-igp-white-200: #dcdcdc;
+  --color-igp-white-300: #bdbdbd;
+  --color-igp-white-400: #989898;
+  --color-igp-white-500: #7c7c7c;
+  --color-igp-white-600: #656565;
+  --color-igp-white-700: #525252;
+  --color-igp-white-800: #464646;
+  --color-igp-white-900: #3d3d3d;
+  --color-igp-white-950: #292929;
+  --color-igp-white: #ffffff;
+
+  /* Blue */
+  --color-igp-blue-50: #f0f6ff;
+  --color-igp-blue-100: #e4eeff;
+  --color-igp-blue-200: #cde0ff;
+  --color-igp-blue-300: #a6c5ff;
+  --color-igp-blue-400: #739dff;
+  --color-igp-blue-500: #3b6bff;
+  --color-igp-blue-600: #1440ff;
+  --color-igp-blue-700: #0032ff;
+  --color-igp-blue-800: #012bd6;
+  --color-igp-blue-900: #0325af;
+  --color-igp-blue-950: #001d77;
+  /* --color-igp-blue: #0000af; */
+  --color-igp-blue: #0032ff;
+
+  /* Sky Blue */
+  --color-igp-sky-blue-50: #edfcff;
+  --color-igp-sky-blue-100: #d6f7ff;
+  --color-igp-sky-blue-200: #b5f3ff;
+  --color-igp-sky-blue-300: #83eeff;
+  --color-igp-sky-blue-400: #48e1ff;
+  --color-igp-sky-blue-500: #1ec7ff;
+  --color-igp-sky-blue-600: #06acff;
+  --color-igp-sky-blue-700: #0099ff;
+  --color-igp-sky-blue-800: #0874c5;
+  --color-igp-sky-blue-900: #0d629b;
+  --color-igp-sky-blue-950: #0e3b5d;
+  --color-igp-sky-blue: #0099ff;
+
+  /* Dark Blue */
+  --color-igp-dark-blue-50: #e6e9ed;
+  --color-igp-dark-blue-100: #ccd3dc;
+  --color-igp-dark-blue-200: #99a6b9;
+  --color-igp-dark-blue-300: #667a95;
+  --color-igp-dark-blue-400: #334d72;
+  --color-igp-dark-blue-500: #00214f;
+  --color-igp-dark-blue-600: #001a3f;
+  --color-igp-dark-blue-700: #00142f;
+  --color-igp-dark-blue-800: #000d20;
+  --color-igp-dark-blue-900: #000710;
+  --color-igp-dark-blue: #00214f;
+
+  /* Blue blue-ocean */
+  --color-igp-blue-ocean-50: #f2f8fd;
+  --color-igp-blue-ocean-100: #e3eefb;
+  --color-igp-blue-ocean-200: #c1ddf6;
+  --color-igp-blue-ocean-300: #8ac1ef;
+  --color-igp-blue-ocean-400: #54a6e5;
+  --color-igp-blue-ocean-500: #2586d2;
+  --color-igp-blue-ocean-600: #1769b2;
+  --color-igp-blue-ocean-700: #145490;
+  --color-igp-blue-ocean-800: #144878;
+  --color-igp-blue-ocean-900: #163d64;
+  --color-igp-blue-ocean-950: #0f2842;
+  --color-igp-blue-ocean: #54a6e5;
+
+  /* Green */
+  --color-igp-green-50: #eefff6;
+  --color-igp-green-100: #d8ffed;
+  --color-igp-green-200: #b3ffdb;
+  --color-igp-green-300: #79fcbf;
+  --color-igp-green-400: #37f19c;
+  --color-igp-green-500: #0dda7d;
+  --color-igp-green-600: #04b263;
+  --color-igp-green-650: #04b363;
+  --color-igp-green-700: #078e52;
+  --color-igp-green-800: #0c6f44;
+  --color-igp-green-900: #0c5b39;
+  --color-igp-green-950: #00331e;
+  --color-igp-green: #04b263;
+
+  --color-igp-green-50: #eeffed;
+  --color-igp-green-100: #d6ffd6;
+  --color-igp-green-200: #b0ffaf;
+  --color-igp-green-300: #71ff71;
+  --color-igp-green-400: #2ffb2d;
+  --color-igp-green-500: #03e502;
+  --color-igp-green-600: #04bf00;
+  --color-igp-green-700: #009900;
+  --color-igp-green-800: #067507;
+  --color-igp-green-900: #085f09;
+  --color-igp-green-950: #003601;
+  --color-igp-green: #009900;
+
+  /* Orange */
+  --color-igp-orange-50: #fff6ed;
+  --color-igp-orange-100: #ffecd4;
+  --color-igp-orange-200: #ffd4a8;
+  --color-igp-orange-300: #ffb671;
+  --color-igp-orange-400: #ff8d3a;
+  --color-igp-orange-500: #fe6b11;
+  --color-igp-orange-600: #ef5007;
+  --color-igp-orange-700: #c63a08;
+  --color-igp-orange-800: #9d2f0f;
+  --color-igp-orange-900: #7e2910;
+  --color-igp-orange-950: #441106;
+  --color-igp-orange: #ff8d3a;
+
+  /* Dark */
+  --color-igp-dark-50: #f6f6f6;
+  --color-igp-dark-100: #e7e7e7;
+  --color-igp-dark-200: #d1d1d1;
+  --color-igp-dark-300: #b0b0b0;
+  --color-igp-dark-400: #888888;
+  --color-igp-dark-450: #999999;
+  --color-igp-dark-500: #6d6d6d;
+  --color-igp-dark-600: #5e6366;
+  --color-igp-dark-700: #4f4f4f;
+  --color-igp-dark-800: #454545;
+  --color-igp-dark-900: #333333;
+  --color-igp-dark-950: #262626;
+  --color-igp-dark-divider: #dcdcdc;
+  --color-igp-dark: #333333;
+
+  /* Brown */
+  --color-igp-brown-50: #fff7ea;
+  --color-igp-brown-100: #ffedcf;
+  --color-igp-brown-200: #ffd79e;
+  --color-igp-brown-300: #ffb861;
+  --color-igp-brown-400: #ff8c21;
+  --color-igp-brown-500: #ff6a00;
+  --color-igp-brown-600: #ff4b00;
+  --color-igp-brown-700: #dc3300;
+  --color-igp-brown-800: #ad2800;
+  --color-igp-brown-850: #943300;
+  --color-igp-brown-900: #8b2403;
+  --color-igp-brown-950: #4b0e00;
+  --color-igp-brown: #8b2403;
+
+  /* Black */
+  --color-igp-black-50: #f6f6f6;
+  --color-igp-black-100: #e7e7e7;
+  --color-igp-black-200: #d1d1d1;
+  --color-igp-black-300: #b0b0b0;
+  --color-igp-black-400: #888888;
+  --color-igp-black-500: #6d6d6d;
+  --color-igp-black-600: #5d5d5d;
+  --color-igp-black-700: #4f4f4f;
+  --color-igp-black-800: #454545;
+  --color-igp-black-900: #3d3d3d;
+  --color-igp-black-950: #222222;
+  --color-igp-black-1000: #1c1c1c;
+  --color-igp-black: #000000;
+
+  /* Red */
+  --color-igp-red-50: #fff0f0;
+  --color-igp-red-100: #ffdddd;
+  --color-igp-red-200: #ffc1c1;
+  --color-igp-red-300: #ff9595;
+  --color-igp-red-400: #ff5959;
+  --color-igp-red-500: #ff2626;
+  --color-igp-red-600: #fc0606;
+  --color-igp-red-700: #e20000;
+  --color-igp-red-800: #af0505;
+  --color-igp-red-900: #900c0c;
+  --color-igp-red-950: #500000;
+  --color-igp-red: #e20000;
+
+  /* Yellow */
+  --color-igp-yellow-50: #feffe7;
+  --color-igp-yellow-100: #fcffc1;
+  --color-igp-yellow-200: #feff86;
+  --color-igp-yellow-300: #fff941;
+  --color-igp-yellow-400: #ffec0d;
+  --color-igp-yellow-500: #ffdd00;
+  --color-igp-yellow-600: #d1a300;
+  --color-igp-yellow-700: #a67502;
+  --color-igp-yellow-800: #895b0a;
+  --color-igp-yellow-900: #744a0f;
+  --color-igp-yellow-950: #442704;
+  --color-igp-yellow: #ffdd00;
+
+  /* Muted */
+  --color-igp-muted-50: #f6f6f7;
+  --color-igp-muted-100: #efeff0;
+  --color-igp-muted-200: #e1e2e4;
+  --color-igp-muted-300: #c5c6c9;
+  --color-igp-muted-400: #babbbf;
+  --color-igp-muted-500: #a7a7ad;
+  --color-igp-muted-600: #929299;
+  --color-igp-muted-700: #7f7e84;
+  --color-igp-muted-800: #68676c;
+  --color-igp-muted-900: #565659;
+  --color-igp-muted-950: #323234;
+  --color-igp-muted: #c5c6c9;
+
+  /* ================ ANIMACIONES ================ */
+  /* Equivalente a theme.animation.giror + keyframes.giror */
+  --animate-giror: giror 0.2s ease-in 0s 1 normal both;
+
+  @keyframes giror {
+    0% {
+      transform: rotate(0);
+    }
+
+    100% {
+      transform: rotate(90deg);
+    }
+  }
+}
+
+/* ===== Utilidades extra (opcional) ===== */
+/* Transición solo de height (en v4 puedes usar arbitrario: transition-[height]) */
+@layer utilities {
+  .transition-height {
+    transition-property: height;
+  }
+}
+
+/* 4) tus estilos globales (ok) */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  background-color: #0000006c;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 8px;
+  background-color: #e7e7e7;
+  border: 1px solid #cacaca;
+}
+
+/* aplica la fuente globalmente */
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background-color: #f6f6f6;
+  min-height: 100vh;
+}
+
+.dark body {
+  background-color: #262626;
+  color: #f5f5f5;
+}
+
+.dark .text-igp-blue,
+.dark .text-igp-blue-50,
+.dark .text-igp-blue-100,
+.dark .text-igp-blue-200,
+.dark .text-igp-blue-300,
+.dark .text-igp-blue-400,
+.dark .text-igp-blue-500,
+.dark .text-igp-blue-600,
+.dark .text-igp-blue-700,
+.dark .text-igp-blue-800,
+.dark .text-igp-blue-900,
+.dark .text-igp-blue-950 {
+  color: #ffffff !important;
+}
+/* Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
