@@ -11,7 +11,7 @@ defineProps({
   <div class="mb-8">
     <div class="flex items-center gap-3 mb-2">
       <span
-        class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-igp-dark-blue-500 text-white text-sm font-bold shadow-md"
+        class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-igp-blue text-white text-sm font-bold shadow-md"
       >
         {{ stepNumber }}
       </span>
@@ -19,7 +19,7 @@ defineProps({
         <p class="text-xs font-medium text-igp-sky-blue-600 uppercase tracking-wider">
           Paso {{ stepNumber }} de {{ totalSteps }}
         </p>
-        <h1 class="text-2xl lg:text-3xl font-bold text-igp-dark-blue-500">
+        <h1 class="text-2xl lg:text-3xl font-bold text-igp-blue">
           {{ title }}
         </h1>
       </div>

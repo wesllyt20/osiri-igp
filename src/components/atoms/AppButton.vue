@@ -19,13 +19,13 @@ const baseClasses =
 const variantClasses = computed(() => {
   const variants = {
     primary:
-      'bg-igp-dark-blue-500 text-white hover:bg-igp-dark-blue-600 focus:ring-igp-dark-blue-400 shadow-md hover:shadow-lg',
+      'bg-igp-blue text-white hover:bg-igp-blue-800 focus:ring-igp-blue-400 shadow-md hover:shadow-lg',
     secondary:
-      'bg-white text-igp-dark-blue-500 border-2 border-igp-dark-blue-500 hover:bg-igp-dark-blue-50 focus:ring-igp-dark-blue-400',
+      'bg-white text-igp-blue border-2 border-igp-blue hover:bg-igp-blue-50 focus:ring-igp-blue-400',
     accent:
       'bg-igp-sky-blue-600 text-white hover:bg-igp-sky-blue-700 focus:ring-igp-sky-blue-400 shadow-md hover:shadow-lg',
     ghost:
-      'bg-transparent text-igp-dark-blue-500 hover:bg-igp-dark-blue-50 focus:ring-igp-dark-blue-400',
+      'bg-transparent text-igp-blue hover:bg-igp-blue-50 focus:ring-igp-blue-400',
     success:
       'bg-igp-green-700 text-white hover:bg-igp-green-800 focus:ring-igp-green-600 shadow-md hover:shadow-lg',
   }

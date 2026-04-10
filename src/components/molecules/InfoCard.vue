@@ -11,7 +11,7 @@ defineProps({
 const variantStyles = {
   default: 'bg-white border border-gray-100',
   highlighted: 'bg-igp-blue-ocean-50 border border-igp-blue-ocean-200',
-  dark: 'bg-igp-dark-blue-500 text-white',
+  dark: 'bg-igp-blue text-white',
 }
 </script>
 
@@ -27,18 +27,18 @@ const variantStyles = {
       :class="
         variant === 'dark'
           ? 'bg-white/15'
-          : 'bg-igp-dark-blue-500/10'
+          : 'bg-igp-blue/10'
       "
     >
       <AppIcon
         :name="icon"
         :size="24"
-        :class="variant === 'dark' ? 'text-white' : 'text-igp-dark-blue-500'"
+        :class="variant === 'dark' ? 'text-white' : 'text-igp-blue'"
       />
     </div>
     <h3
       class="text-lg font-bold mb-2"
-      :class="variant === 'dark' ? 'text-white' : 'text-igp-dark-blue-500'"
+      :class="variant === 'dark' ? 'text-white' : 'text-igp-blue'"
     >
       {{ title }}
     </h3>

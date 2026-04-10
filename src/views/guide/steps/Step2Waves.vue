@@ -8,7 +8,7 @@ import AppIcon from '@/components/atoms/AppIcon.vue'
   <div class="space-y-8">
     <!-- Intro -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <h3 class="text-lg font-bold text-igp-dark-blue-500 mb-3">¿Qué son las ondas sísmicas?</h3>
+      <h3 class="text-lg font-bold text-igp-blue mb-3">¿Qué son las ondas sísmicas?</h3>
       <p class="text-gray-600 leading-relaxed">
         Las ondas sísmicas son perturbaciones que se propagan a través de la Tierra, generadas por la
         liberación de energía durante un terremoto. Se dividen en dos tipos principales que viajan a
@@ -26,7 +26,7 @@ import AppIcon from '@/components/atoms/AppIcon.vue'
             <span class="text-lg font-bold text-igp-sky-blue-600">P</span>
           </div>
           <div>
-            <h4 class="font-bold text-igp-dark-blue-500">Onda Primaria (P)</h4>
+            <h4 class="font-bold text-igp-blue">Onda Primaria (P)</h4>
             <p class="text-xs text-gray-400">Onda compresional / longitudinal</p>
           </div>
         </div>
@@ -66,7 +66,7 @@ import AppIcon from '@/components/atoms/AppIcon.vue'
             <span class="text-lg font-bold text-igp-orange-500">S</span>
           </div>
           <div>
-            <h4 class="font-bold text-igp-dark-blue-500">Onda Secundaria (S)</h4>
+            <h4 class="font-bold text-igp-blue">Onda Secundaria (S)</h4>
             <p class="text-xs text-gray-400">Onda de cizalla / transversal</p>
           </div>
         </div>
@@ -112,7 +112,7 @@ import AppIcon from '@/components/atoms/AppIcon.vue'
 
     <!-- Importance -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <h3 class="text-lg font-bold text-igp-dark-blue-500 mb-3 flex items-center gap-2">
+      <h3 class="text-lg font-bold text-igp-blue mb-3 flex items-center gap-2">
         <AppIcon name="target" :size="20" class="text-igp-sky-blue-600" />
         Importancia en la Localización
       </h3>
@@ -121,19 +121,19 @@ import AppIcon from '@/components/atoms/AppIcon.vue'
       </p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-          <AppIcon name="clock" :size="18" class="text-igp-dark-blue-500 flex-shrink-0 mt-0.5" />
+          <AppIcon name="clock" :size="18" class="text-igp-blue flex-shrink-0 mt-0.5" />
           <p class="text-sm text-gray-600">El tiempo S-P permite estimar la <strong>distancia epicentral</strong></p>
         </div>
         <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-          <AppIcon name="compass" :size="18" class="text-igp-dark-blue-500 flex-shrink-0 mt-0.5" />
+          <AppIcon name="compass" :size="18" class="text-igp-blue flex-shrink-0 mt-0.5" />
           <p class="text-sm text-gray-600">Con 3+ estaciones se puede <strong>triangular el epicentro</strong></p>
         </div>
         <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-          <AppIcon name="layers" :size="18" class="text-igp-dark-blue-500 flex-shrink-0 mt-0.5" />
+          <AppIcon name="layers" :size="18" class="text-igp-blue flex-shrink-0 mt-0.5" />
           <p class="text-sm text-gray-600">La relación Vp/Vs ayuda a estimar la <strong>profundidad focal</strong></p>
         </div>
         <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-          <AppIcon name="bar-chart-2" :size="18" class="text-igp-dark-blue-500 flex-shrink-0 mt-0.5" />
+          <AppIcon name="bar-chart-2" :size="18" class="text-igp-blue flex-shrink-0 mt-0.5" />
           <p class="text-sm text-gray-600">La amplitud de las ondas es clave para calcular la <strong>magnitud</strong></p>
         </div>
       </div>

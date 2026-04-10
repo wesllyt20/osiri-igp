@@ -127,7 +127,7 @@ const chartFeatures = [
   <div class="space-y-8">
     <!-- Description -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <h3 class="text-lg font-bold text-igp-dark-blue-500 mb-3">Visualización Interactiva</h3>
+      <h3 class="text-lg font-bold text-igp-blue mb-3">Visualización Interactiva</h3>
       <p class="text-gray-600 leading-relaxed">
         A continuación se muestra un sismograma de ejemplo generado con datos simulados.
         Utiliza las herramientas de la gráfica para explorar la señal: puedes hacer zoom,
@@ -165,7 +165,7 @@ const chartFeatures = [
 
     <!-- Key elements to observe -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <h3 class="text-lg font-bold text-igp-dark-blue-500 mb-4 flex items-center gap-2">
+      <h3 class="text-lg font-bold text-igp-blue mb-4 flex items-center gap-2">
         <AppIcon name="crosshair" :size="20" class="text-igp-sky-blue-600" />
         Elementos a observar
       </h3>
@@ -173,21 +173,21 @@ const chartFeatures = [
         <div class="flex items-start gap-3 p-3 bg-igp-sky-blue-50 rounded-xl">
           <div class="w-3 h-3 rounded-full bg-igp-sky-blue-600 flex-shrink-0 mt-1.5" />
           <div>
-            <p class="text-sm font-semibold text-igp-dark-blue-500">Llegada de Onda P</p>
+            <p class="text-sm font-semibold text-igp-blue">Llegada de Onda P</p>
             <p class="text-xs text-gray-500">Primera perturbación visible. La amplitud es menor pero marca el inicio del evento.</p>
           </div>
         </div>
         <div class="flex items-start gap-3 p-3 bg-igp-orange-50 rounded-xl">
           <div class="w-3 h-3 rounded-full bg-igp-orange-500 flex-shrink-0 mt-1.5" />
           <div>
-            <p class="text-sm font-semibold text-igp-dark-blue-500">Llegada de Onda S</p>
+            <p class="text-sm font-semibold text-igp-blue">Llegada de Onda S</p>
             <p class="text-xs text-gray-500">Llegada posterior con mayor amplitud. Es crucial para el cálculo de distancia.</p>
           </div>
         </div>
         <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
           <div class="w-3 h-3 rounded-full bg-gray-400 flex-shrink-0 mt-1.5" />
           <div>
-            <p class="text-sm font-semibold text-igp-dark-blue-500">Amplitud Máxima</p>
+            <p class="text-sm font-semibold text-igp-blue">Amplitud Máxima</p>
             <p class="text-xs text-gray-500">El punto de mayor desplazamiento, utilizado para calcular la magnitud del evento.</p>
           </div>
         </div>

@@ -8,7 +8,7 @@ import InfoCard from '@/components/molecules/InfoCard.vue'
   <div class="space-y-8">
     <!-- Intro -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <h3 class="text-lg font-bold text-igp-dark-blue-500 mb-3">Operaciones Vectoriales en Sismología</h3>
+      <h3 class="text-lg font-bold text-igp-blue mb-3">Operaciones Vectoriales en Sismología</h3>
       <p class="text-gray-600 leading-relaxed">
         En la localización sísmica, se utilizan conceptos vectoriales para determinar
         la dirección y posición del epicentro. Cada estación sísmica define un círculo
@@ -43,7 +43,7 @@ import InfoCard from '@/components/molecules/InfoCard.vue'
 
     <!-- Triangulation visual -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <h3 class="text-lg font-bold text-igp-dark-blue-500 mb-4 flex items-center gap-2">
+      <h3 class="text-lg font-bold text-igp-blue mb-4 flex items-center gap-2">
         <AppIcon name="target" :size="20" class="text-igp-sky-blue-600" />
         Principio de Triangulación
       </h3>
@@ -99,11 +99,11 @@ import InfoCard from '@/components/molecules/InfoCard.vue'
 
     <!-- Mathematical concept -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <h3 class="text-lg font-bold text-igp-dark-blue-500 mb-4">Formulación Matemática</h3>
+      <h3 class="text-lg font-bold text-igp-blue mb-4">Formulación Matemática</h3>
       <div class="space-y-4">
         <div class="bg-gray-50 rounded-xl p-4">
           <p class="text-xs font-medium text-gray-500 mb-2">Ecuación del Círculo para cada estación:</p>
-          <p class="font-mono text-center text-igp-dark-blue-500 font-semibold">
+          <p class="font-mono text-center text-igp-blue font-semibold">
             (x - xᵢ)² + (y - yᵢ)² = Dᵢ²
           </p>
         </div>
@@ -117,7 +117,7 @@ import InfoCard from '@/components/molecules/InfoCard.vue'
         </div>
         <div class="bg-gray-50 rounded-xl p-4">
           <p class="text-xs font-medium text-gray-500 mb-2">Sistema de ecuaciones (restando pares):</p>
-          <p class="font-mono text-center text-igp-dark-blue-500 font-semibold text-sm">
+          <p class="font-mono text-center text-igp-blue font-semibold text-sm">
             2(x₂ - x₁)x + 2(y₂ - y₁)y = D₁² - D₂² + x₂² - x₁² + y₂² - y₁²
           </p>
         </div>

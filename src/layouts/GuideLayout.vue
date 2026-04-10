@@ -1,5 +1,6 @@
 <script setup>
 import AppHeader from '@/components/organisms/AppHeader.vue'
+import AppCintillo from '@/components/organisms/AppCintillo.vue'
 import GuideSidebar from '@/components/organisms/GuideSidebar.vue'
 import { useGuideStore } from '@/stores/guideStore'
 
@@ -9,7 +10,8 @@ const guideStore = useGuideStore()
 <template>
   <div class="min-h-screen flex flex-col bg-gray-50">
     <AppHeader />
-    <div class="flex flex-1 overflow-hidden" style="height: calc(100vh - 4rem)">
+    <AppCintillo :sticky="true" />
+    <div class="flex flex-1 overflow-hidden" style="height: calc(100vh - 4rem - 2.25rem)">
       <!-- Sidebar -->
       <GuideSidebar />
 

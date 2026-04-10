@@ -79,7 +79,7 @@ const reportFields = [
 <template>
   <div class="space-y-8">
     <!-- Report Header -->
-    <div class="bg-gradient-to-br from-igp-dark-blue-500 to-igp-blue-ocean-800 rounded-2xl p-8 text-white relative overflow-hidden">
+    <div class="bg-gradient-to-br from-igp-blue to-igp-blue-ocean-800 rounded-2xl p-8 text-white relative overflow-hidden">
       <div class="absolute top-0 right-0 w-40 h-40 bg-igp-sky-blue-600/10 rounded-full -translate-y-1/2 translate-x-1/2" />
       <div class="absolute bottom-0 left-0 w-32 h-32 bg-igp-sky-blue-600/5 rounded-full translate-y-1/2 -translate-x-1/2" />
 
@@ -113,7 +113,7 @@ const reportFields = [
     <!-- Report Data Grid -->
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div class="p-5 border-b border-gray-100">
-        <h3 class="text-lg font-bold text-igp-dark-blue-500 flex items-center gap-2">
+        <h3 class="text-lg font-bold text-igp-blue flex items-center gap-2">
           <AppIcon name="file-text" :size="20" class="text-igp-sky-blue-600" />
           Parámetros del Evento
         </h3>
@@ -127,7 +127,7 @@ const reportFields = [
           <AppIcon :name="field.icon" :size="18" class="text-igp-sky-blue-600 flex-shrink-0" />
           <div>
             <p class="text-xs text-gray-400 font-medium">{{ field.label }}</p>
-            <p class="text-sm font-semibold text-igp-dark-blue-500">{{ field.value }}</p>
+            <p class="text-sm font-semibold text-igp-blue">{{ field.value }}</p>
           </div>
         </div>
       </div>
@@ -138,35 +138,35 @@ const reportFields = [
 
     <!-- Technical details -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <h3 class="text-lg font-bold text-igp-dark-blue-500 mb-4 flex items-center gap-2">
+      <h3 class="text-lg font-bold text-igp-blue mb-4 flex items-center gap-2">
         <AppIcon name="info" :size="20" class="text-igp-sky-blue-600" />
         Información Técnica
       </h3>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
         <div class="bg-gray-50 rounded-xl p-4 text-center">
           <p class="text-xs text-gray-400 mb-1">Estaciones Utilizadas</p>
-          <p class="text-2xl font-bold text-igp-dark-blue-500">{{ report.stationsUsed }}</p>
+          <p class="text-2xl font-bold text-igp-blue">{{ report.stationsUsed }}</p>
         </div>
         <div class="bg-gray-50 rounded-xl p-4 text-center">
           <p class="text-xs text-gray-400 mb-1">RMS Residual</p>
-          <p class="text-2xl font-bold text-igp-dark-blue-500">{{ report.rmsResidual }}</p>
+          <p class="text-2xl font-bold text-igp-blue">{{ report.rmsResidual }}</p>
         </div>
         <div class="bg-gray-50 rounded-xl p-4 text-center">
           <p class="text-xs text-gray-400 mb-1">GAP Azimutal</p>
-          <p class="text-2xl font-bold text-igp-dark-blue-500">{{ report.gap }}</p>
+          <p class="text-2xl font-bold text-igp-blue">{{ report.gap }}</p>
         </div>
       </div>
     </div>
 
     <!-- Observations -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <h3 class="text-lg font-bold text-igp-dark-blue-500 mb-3">Observaciones</h3>
+      <h3 class="text-lg font-bold text-igp-blue mb-3">Observaciones</h3>
       <p class="text-gray-600 leading-relaxed">{{ report.observations }}</p>
     </div>
 
     <!-- Felt reports -->
     <div class="bg-igp-sky-blue-50 rounded-2xl border border-igp-sky-blue-200 p-6">
-      <h3 class="text-base font-bold text-igp-dark-blue-500 mb-2 flex items-center gap-2">
+      <h3 class="text-base font-bold text-igp-blue mb-2 flex items-center gap-2">
         <AppIcon name="alert-circle" :size="18" class="text-igp-sky-blue-600" />
         Percepción
       </h3>

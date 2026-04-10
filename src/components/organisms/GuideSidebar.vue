@@ -22,7 +22,7 @@ function goToStep(stepId) {
   >
     <div class="p-4 border-b border-gray-100">
       <div class="flex items-center justify-between mb-3">
-        <h2 class="text-sm font-bold text-igp-dark-blue-500 uppercase tracking-wide">
+        <h2 class="text-sm font-bold text-igp-blue uppercase tracking-wide">
           Pasos de la Guía
         </h2>
         <button
@@ -50,7 +50,7 @@ function goToStep(stepId) {
     <div class="p-4 border-t border-gray-100">
       <router-link
         to="/"
-        class="flex items-center gap-2 text-xs text-gray-400 hover:text-igp-dark-blue-500 transition-colors"
+        class="flex items-center gap-2 text-xs text-gray-400 hover:text-igp-blue transition-colors"
       >
         <AppIcon name="arrow-left" :size="14" />
         Volver al inicio
@@ -61,7 +61,7 @@ function goToStep(stepId) {
   <!-- Collapsed sidebar toggle (desktop) -->
   <button
     v-if="!guideStore.sidebarOpen"
-    class="hidden lg:flex fixed left-0 top-1/2 -translate-y-1/2 z-40 bg-igp-dark-blue-500 text-white p-2 rounded-r-xl shadow-lg hover:bg-igp-dark-blue-600 transition-colors"
+    class="hidden lg:flex fixed left-0 top-1/2 -translate-y-1/2 z-40 bg-igp-blue text-white p-2 rounded-r-xl shadow-lg hover:bg-igp-blue-800 transition-colors"
     @click="guideStore.toggleSidebar()"
   >
     <AppIcon name="chevron-right" :size="20" />
@@ -81,7 +81,7 @@ function goToStep(stepId) {
 
       <div class="flex-1 text-center">
         <p class="text-xs text-gray-400">Paso {{ guideStore.currentStep }} de {{ guideStore.totalSteps }}</p>
-        <p class="text-sm font-semibold text-igp-dark-blue-500 truncate px-2">
+        <p class="text-sm font-semibold text-igp-blue truncate px-2">
           {{ guideStore.currentStepData?.shortTitle }}
         </p>
       </div>

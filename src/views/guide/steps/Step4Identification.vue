@@ -114,7 +114,7 @@ const criteria = [
   <div class="space-y-8">
     <!-- Controls -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <h3 class="text-lg font-bold text-igp-dark-blue-500 mb-4">Visualización con marcadores</h3>
+      <h3 class="text-lg font-bold text-igp-blue mb-4">Visualización con marcadores</h3>
       <p class="text-gray-600 text-sm mb-4 leading-relaxed">
         Activa o desactiva los marcadores de las ondas P y S para entender visualmente
         dónde comienza cada fase en el sismograma.
@@ -158,7 +158,7 @@ const criteria = [
           >
             {{ c.wave }}
           </div>
-          <h4 class="font-bold text-igp-dark-blue-500">
+          <h4 class="font-bold text-igp-blue">
             Criterios para identificar la Onda {{ c.wave }}
           </h4>
         </div>
@@ -167,7 +167,7 @@ const criteria = [
             <AppIcon
               name="check-circle"
               :size="16"
-              class="flex-shrink-0 mt-0.5"
+              class="shrink-0 mt-0.5"
               :class="c.wave === 'P' ? 'text-igp-sky-blue-600' : 'text-igp-orange-500'"
             />
             <span>{{ item }}</span>

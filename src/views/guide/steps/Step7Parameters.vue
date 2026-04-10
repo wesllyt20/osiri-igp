@@ -64,7 +64,7 @@ const parameters = [
   <div class="space-y-8">
     <!-- Intro -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <h3 class="text-lg font-bold text-igp-dark-blue-500 mb-3">Determinación de Parámetros</h3>
+      <h3 class="text-lg font-bold text-igp-blue mb-3">Determinación de Parámetros</h3>
       <p class="text-gray-600 leading-relaxed">
         Con los datos recopilados en los pasos anteriores, el operador sísmico puede determinar
         los parámetros fundamentales del evento. Cada parámetro se obtiene mediante procedimientos
@@ -83,7 +83,7 @@ const parameters = [
           <div class="flex items-center gap-3">
             <AppIcon :name="param.icon" :size="22" :class="param.iconColor" />
             <div>
-              <p class="font-bold text-igp-dark-blue-500 text-base">{{ param.label }}</p>
+              <p class="font-bold text-igp-blue text-base">{{ param.label }}</p>
               <p class="text-xl font-bold font-mono">{{ param.value }}</p>
             </div>
           </div>
@@ -97,7 +97,7 @@ const parameters = [
 
     <!-- Process summary -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <h3 class="text-lg font-bold text-igp-dark-blue-500 mb-4 flex items-center gap-2">
+      <h3 class="text-lg font-bold text-igp-blue mb-4 flex items-center gap-2">
         <AppIcon name="trending-up" :size="20" class="text-igp-sky-blue-600" />
         Flujo de Determinación
       </h3>
@@ -111,7 +111,7 @@ const parameters = [
           'Determinar magnitud a partir de la amplitud máxima',
           'Identificar la referencia geográfica del epicentro',
         ]" :key="i" class="flex items-center gap-4 p-3 rounded-xl" :class="i % 2 === 0 ? 'bg-gray-50' : ''">
-          <div class="w-7 h-7 rounded-lg bg-igp-dark-blue-500 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+          <div class="w-7 h-7 rounded-lg bg-igp-blue text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
             {{ i + 1 }}
           </div>
           <p class="text-sm text-gray-700">{{ item }}</p>

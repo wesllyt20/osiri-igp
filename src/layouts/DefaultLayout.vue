@@ -6,7 +6,7 @@ import AppFooter from '@/components/organisms/AppFooter.vue'
 <template>
   <div class="min-h-screen flex flex-col bg-igp-white-50">
     <AppHeader />
-    <main class="flex-1">
+    <main class="flex-1 -mt-16">
       <slot />
     </main>
     <AppFooter />

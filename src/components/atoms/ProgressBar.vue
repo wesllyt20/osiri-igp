@@ -12,7 +12,7 @@ defineProps({
   <div class="w-full">
     <div v-if="showLabel" class="flex items-center justify-between mb-1.5">
       <span class="text-xs font-medium text-gray-500">Progreso</span>
-      <span class="text-xs font-bold text-igp-dark-blue-500">{{ Math.round(value) }}%</span>
+      <span class="text-xs font-bold text-igp-blue">{{ Math.round(value) }}%</span>
     </div>
     <div :class="['w-full bg-gray-200 rounded-full overflow-hidden', height]">
       <div

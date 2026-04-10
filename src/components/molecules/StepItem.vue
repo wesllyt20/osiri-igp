@@ -15,7 +15,7 @@ defineEmits(['select'])
   <button
     class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left group cursor-pointer"
     :class="{
-      'bg-igp-dark-blue-500 text-white shadow-md shadow-igp-dark-blue-500/20': isActive,
+      'bg-igp-blue text-white shadow-md shadow-igp-blue/20': isActive,
       'bg-igp-green-100 text-igp-green-800 hover:bg-igp-green-200': isCompleted && !isActive,
       'hover:bg-gray-100 text-gray-600': !isActive && !isCompleted,
     }"
