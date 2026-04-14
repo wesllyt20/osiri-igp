@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, shallowRef, reactive }
 import { useReportStore } from '@/stores/reportStore'
 import AppIcon from '@/components/atoms/AppIcon.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
+import Swal from 'sweetalert2'
 
 const store = useReportStore()
 
@@ -16,9 +17,14 @@ let Plotly = null
 const stationInputs = reactive({})
 
 function initInputs() {
+  const saved = store.getSavedStationInputs()
   stations.value.forEach((s) => {
     if (!stationInputs[s]) {
-      stationInputs[s] = { tP: '', tS: '', maxAmp: '', validated: false, error: '' }
+      if (saved[s]) {
+        stationInputs[s] = { ...saved[s] }
+      } else {
+        stationInputs[s] = { tP: '', tS: '', maxAmp: '', validated: false, error: '' }
+      }
     }
   })
 }
@@ -73,7 +79,7 @@ function renderSingleChart(data, idx) {
       y: ds.amplitude,
       type: 'scatter',
       mode: 'lines',
-      line: { color: '#0032ff', width: 1 },
+      line: { color: '#000000', width: 1 },
       name: data.stationName,
       hovertemplate: 'Tiempo: %{x:.2f}s<br>Amplitud: %{y:.4f}mm<extra></extra>',
     },
@@ -158,6 +164,54 @@ function renderSingleChart(data, idx) {
   }
 
   Plotly.newPlot(el, traces, layout, config)
+
+  // Add click handler for assigning values to inputs
+  el.on('plotly_click', async (eventData) => {
+    if (!eventData || !eventData.points || !eventData.points.length) return
+    const input = stationInputs[data.stationName]
+    if (!input || input.validated) return
+
+    const point = eventData.points[0]
+    const clickedTime = parseFloat(point.x).toFixed(2)
+    const clickedAmp = Math.abs(parseFloat(point.y)).toFixed(4)
+
+    const { value } = await Swal.fire({
+      title: `Estación ${data.stationName}`,
+      html: `
+        <div style="text-align:left;font-size:14px;margin-bottom:8px;">
+          <p><strong>Tiempo:</strong> ${clickedTime} s</p>
+          <p><strong>Amplitud:</strong> ${clickedAmp} mm</p>
+        </div>
+        <p style="font-size:13px;color:#666;">¿A qué parámetro deseas asignar este punto?</p>
+      `,
+      input: 'select',
+      inputOptions: {
+        tP: `Tiempo Onda P (${clickedTime} s)`,
+        tS: `Tiempo Onda S (${clickedTime} s)`,
+        maxAmp: `Amplitud Máxima (${clickedAmp} mm)`,
+      },
+      inputPlaceholder: 'Selecciona una opción',
+      showCancelButton: true,
+      confirmButtonText: 'Asignar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#00214f',
+      inputValidator: (val) => {
+        if (!val) return 'Debes seleccionar una opción'
+      },
+    })
+
+    if (value) {
+      if (value === 'tP') {
+        input.tP = clickedTime
+      } else if (value === 'tS') {
+        input.tS = clickedTime
+      } else if (value === 'maxAmp') {
+        input.maxAmp = clickedAmp
+      }
+      // Persist inputs
+      store.saveStationInputs(stationInputs)
+    }
+  })
 }
 
 function validateStation(stationName, idx) {
@@ -200,6 +254,9 @@ function validateStation(stationName, idx) {
   // Save to store for the next steps
   store.setStationAnalysis(stationName, { tP, tS, maxAmp: amp })
 
+  // Persist inputs so they survive navigation
+  store.saveStationInputs(stationInputs)
+
   // Re-render chart with markers
   renderSingleChart(data, idx)
 }
@@ -210,6 +267,8 @@ function resetValidation(stationName, idx) {
     input.validated = false
     input.error = ''
   }
+  // Persist reset state
+  store.saveStationInputs(stationInputs)
   const data = waveformData.value.find((d) => d.stationName === stationName)
   if (data) renderSingleChart(data, idx)
 }

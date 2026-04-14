@@ -23,10 +23,17 @@ function selectQuake(record) {
 
 // Keep selectedQuake in sync if store.selectedRecord changes
 watch(() => store.selectedRecordId, (id) => {
-  if (id && !selectedQuake.value) {
+  if (id) {
     selectedQuake.value = records.value.find(r => r.id === id) || null
+  } else {
+    selectedQuake.value = null
   }
 })
+
+function handleChangeSeismo() {
+  selectedQuake.value = null
+  store.goToStep1()
+}
 
 function formatDateShort(dateStr) {
   if (!dateStr) return ''
@@ -70,22 +77,18 @@ function handleNextStep() {
         </div>
 
         <nav class="flex-1 p-2 space-y-0.5 overflow-y-auto">
-          <button
+          <div
             v-for="(step, idx) in steps"
             :key="step.id"
-            class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-all duration-200 animate-fadeSlideIn"
+            class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-all duration-200 animate-fadeSlideIn select-none"
             :style="{ animationDelay: (idx * 60) + 'ms' }"
             :class="[
               currentStep === step.id
                 ? 'bg-igp-dark-blue text-white shadow-md'
                 : store.isCompleted(step.id)
-                  ? 'bg-igp-green-50 text-igp-green-800 hover:bg-igp-green-100'
-                  : store.canGoToStep(step.id)
-                    ? 'text-gray-600 hover:bg-gray-50'
-                    : 'text-gray-300 cursor-not-allowed'
+                  ? 'bg-igp-green-50 text-igp-green-800'
+                  : 'text-gray-300'
             ]"
-            :disabled="!store.canGoToStep(step.id)"
-            @click="store.canGoToStep(step.id) && store.setStep(step.id)"
           >
             <div
               class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold"
@@ -105,12 +108,23 @@ function handleNextStep() {
               <span v-else>{{ step.id }}</span>
             </div>
             <p class="text-[11px] font-semibold truncate">{{ step.title }}</p>
-          </button>
+          </div>
         </nav>
+
+        <!-- Change sismo option (visible when on step >= 2) -->
+        <div v-if="currentStep >= 2" class="p-3 border-t border-gray-100">
+          <button
+            class="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-all duration-200 bg-igp-orange-50 text-igp-orange-700 hover:bg-igp-orange-100 cursor-pointer"
+            @click="handleChangeSeismo"
+          >
+            <AppIcon name="refresh-cw" :size="14" />
+            <p class="text-[11px] font-semibold">Cambiar sismo</p>
+          </button>
+        </div>
       </aside>
 
-      <!-- Column 2: Earthquake List -->
-      <aside class="w-72 bg-white border-r border-gray-200 shrink-0 hidden lg:flex flex-col animate-slideRight" style="animation-delay: 100ms">
+      <!-- Column 2: Earthquake List (only visible on step 1) -->
+      <aside v-if="currentStep === 1" class="w-72 bg-white border-r border-gray-200 shrink-0 hidden lg:flex flex-col animate-slideRight" style="animation-delay: 100ms">
         <div class="p-4 border-b border-gray-100">
           <h3 class="text-[10px] font-bold text-igp-dark-blue uppercase tracking-wider flex items-center gap-2">
             <AppIcon name="activity" :size="14" />

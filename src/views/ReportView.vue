@@ -7,6 +7,8 @@ import ReportStepAnalysis from '@/views/report/ReportStepAnalysis.vue'
 import ReportStepDistance from '@/views/report/ReportStepDistance.vue'
 import ReportStepSPChart from '@/views/report/ReportStepSPChart.vue'
 import ReportStepEpicenter from '@/views/report/ReportStepEpicenter.vue'
+import ReportStepMagnitude from '@/views/report/ReportStepMagnitude.vue'
+import ReportStepReport from '@/views/report/ReportStepReport.vue'
 
 const store = useReportStore()
 
@@ -24,6 +26,8 @@ onUnmounted(() => {
       <ReportStepDistance v-else-if="store.currentStep === 4" />
       <ReportStepSPChart v-else-if="store.currentStep === 5" />
       <ReportStepEpicenter v-else-if="store.currentStep === 6" />
+      <ReportStepMagnitude v-else-if="store.currentStep === 7" />
+      <ReportStepReport v-else-if="store.currentStep === 8" />
     </div>
   </ReportLayout>
 </template>

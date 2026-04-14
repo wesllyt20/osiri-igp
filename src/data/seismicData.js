@@ -66,8 +66,8 @@ export const SEISMIC_RECORDS = [
     info: {
       magnitud: '4.5 ML',
       profundidad: '30 km',
-      latitud: '-5.17°',
-      longitud: '-80.15°',
+      latitud: '-5.42°',
+      longitud: '-80.33°',
       referencia: '40 km al Suroeste de Piura',
       region: 'Costa Norte del Perú',
       areasAfectadas: 'Piura, Sullana, Paita',
@@ -396,6 +396,8 @@ export const STEP_TITLES = {
   distance: 'Distancia Epicentral',
   spChart: 'Gráfico S-P vs Distancia',
   epicenter: 'Localización del Epicentro',
+  magnitude: 'Magnitud en Escala de Richter',
+  report: 'Reporte Sísmico',
 }
 
 // ── Títulos de columnas del reporte ──

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, nextTick, ref } from 'vue'
+import { computed, onMounted, onUnmounted, nextTick, ref, watch } from 'vue'
 import { useReportStore } from '@/stores/reportStore'
 import AppIcon from '@/components/atoms/AppIcon.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
@@ -8,6 +8,7 @@ import { SEISMIC_CONSTANTS } from '@/data/seismicData'
 const store = useReportStore()
 let Plotly = null
 const chartReady = ref(false)
+let resizeObserver = null
 
 const selectedRecord = computed(() => store.selectedRecord)
 const stations = computed(() => store.stations)
@@ -16,62 +17,107 @@ const analysis = computed(() => store.stationAnalysis)
 const VP = SEISMIC_CONSTANTS.VP
 const VS = SEISMIC_CONSTANTS.VS
 
+// Station visibility toggles - all visible initially
+const stationVisibility = ref({})
+
+// Initialize visibility when stations change
+watch(stations, (s) => {
+  const vis = {}
+  s.forEach((st) => { vis[st] = true })
+  stationVisibility.value = vis
+}, { immediate: true })
+
+// Station colors
+const STATION_COLORS = ['#0032ff', '#ff8d3a', '#04b363', '#9333ea', '#e20000', '#0099ff', '#d97706', '#059669']
+
 // Compute S-P vs epicentral distance data per station
 const chartData = computed(() => {
   return stations.value
-    .map((s) => {
+    .map((s, idx) => {
       const a = analysis.value[s]
       if (!a) return null
       const deltaSP = a.tS - a.tP
       const distance = (deltaSP * VP * VS) / (VP - VS)
-      return { station: s, deltaSP, distance }
+      return { station: s, deltaSP, distance, color: STATION_COLORS[idx % STATION_COLORS.length] }
     })
     .filter(Boolean)
     .sort((a, b) => a.distance - b.distance)
 })
+
+function toggleStation(station) {
+  stationVisibility.value = { ...stationVisibility.value, [station]: !stationVisibility.value[station] }
+  renderChart()
+}
 
 async function renderChart() {
   if (!Plotly || !chartData.value.length) return
   const el = document.getElementById('sp-chart')
   if (!el) return
 
-  const stationNames = chartData.value.map((d) => d.station)
-  const distances = chartData.value.map((d) => d.distance)
-  const deltaSPs = chartData.value.map((d) => d.deltaSP)
-
-  // Theoretical line: deltaSP = D * (VP - VS) / (VP * VS)
-  const maxDist = Math.max(...distances) * 1.2
+  // Theoretical line
+  const maxDist = Math.max(...chartData.value.map((d) => d.distance)) * 1.3
   const lineDist = [0, maxDist]
   const lineSP = lineDist.map((d) => (d * (VP - VS)) / (VP * VS))
 
   const traces = [
-    {
-      x: distances,
-      y: deltaSPs,
-      type: 'scatter',
-      mode: 'markers+text',
-      marker: { size: 12, color: '#0032ff', symbol: 'circle' },
-      text: stationNames,
-      textposition: 'top right',
-      textfont: { size: 11, color: '#0032ff', family: 'Poppins' },
-      name: 'Estaciones',
-      hovertemplate: '<b>%{text}</b><br>Distancia: %{x:.1f} km<br>S-P: %{y:.2f} s<extra></extra>',
-    },
+    // Theoretical curve
     {
       x: lineDist,
       y: lineSP,
       type: 'scatter',
       mode: 'lines',
-      line: { color: '#ff0000', width: 2, dash: 'dash' },
+      line: { color: '#d1d5db', width: 2, dash: 'dash' },
       name: 'Curva teórica',
       hoverinfo: 'skip',
     },
   ]
 
+  // Per-station traces with projection lines
+  chartData.value.forEach((d) => {
+    const visible = stationVisibility.value[d.station]
+    if (!visible) return
+
+    // Vertical line from (distance, 0) to (distance, deltaSP)
+    traces.push({
+      x: [d.distance, d.distance],
+      y: [0, d.deltaSP],
+      type: 'scatter',
+      mode: 'lines',
+      line: { color: d.color, width: 1.5, dash: 'dot' },
+      showlegend: false,
+      hoverinfo: 'skip',
+    })
+
+    // Horizontal line from (0, deltaSP) to (distance, deltaSP)
+    traces.push({
+      x: [0, d.distance],
+      y: [d.deltaSP, d.deltaSP],
+      type: 'scatter',
+      mode: 'lines',
+      line: { color: d.color, width: 1.5, dash: 'dot' },
+      showlegend: false,
+      hoverinfo: 'skip',
+    })
+
+    // Station point
+    traces.push({
+      x: [d.distance],
+      y: [d.deltaSP],
+      type: 'scatter',
+      mode: 'markers+text',
+      marker: { size: 14, color: d.color, symbol: 'circle', line: { color: 'white', width: 2 } },
+      text: [d.station],
+      textposition: 'top right',
+      textfont: { size: 12, color: d.color, family: 'Poppins', weight: 700 },
+      name: d.station,
+      hovertemplate: `<b>${d.station}</b><br>Distancia: ${d.distance.toFixed(1)} km<br>S-P: ${d.deltaSP.toFixed(2)} s<extra></extra>`,
+    })
+  })
+
   const layout = {
     title: {
       text: 'Gráfico S-P vs Distancia Epicentral',
-      font: { size: 16, color: '#0032ff', family: 'Poppins' },
+      font: { size: 16, color: '#00214f', family: 'Poppins' },
     },
     xaxis: {
       title: { text: 'Distancia Epicentral (km)', font: { size: 13, family: 'Poppins' } },
@@ -102,7 +148,7 @@ async function renderChart() {
     displaylogo: false,
   }
 
-  Plotly.newPlot(el, traces, layout, config)
+  await Plotly.newPlot(el, traces, layout, config)
 }
 
 function goBack() {
@@ -119,13 +165,27 @@ onMounted(async () => {
   chartReady.value = true
   await nextTick()
   renderChart()
+
+  // Responsive resize
+  const el = document.getElementById('sp-chart')
+  if (el && window.ResizeObserver) {
+    resizeObserver = new ResizeObserver(() => {
+      if (Plotly && el) Plotly.Plots.resize(el)
+    })
+    resizeObserver.observe(el)
+  }
 })
 
 onUnmounted(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
   if (Plotly) {
     const el = document.getElementById('sp-chart')
     if (el) try { Plotly.purge(el) } catch {}
   }
+  Plotly = null
 })
 </script>
 
@@ -161,8 +221,29 @@ onUnmounted(() => {
       <p class="font-semibold mb-1">¿Qué muestra este gráfico?</p>
       <p>
         La relación entre la diferencia de tiempos de llegada de las ondas S y P (ΔT = Ts - Tp) y la distancia epicentral.
-        Los puntos deben alinearse sobre la curva teórica (línea roja), confirmando la consistencia de tus mediciones.
+        Las líneas punteadas muestran cómo el Ts-Tp y la distancia se intersecan en cada punto. Usa los botones para mostrar u ocultar cada estación.
       </p>
+    </div>
+
+    <!-- Station toggle buttons -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      <button
+        v-for="d in chartData"
+        :key="d.station"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 cursor-pointer"
+        :class="stationVisibility[d.station]
+          ? 'text-white shadow-md'
+          : 'bg-white text-gray-400 border border-gray-200 hover:border-gray-400'"
+        :style="stationVisibility[d.station] ? { backgroundColor: d.color } : {}"
+        @click="toggleStation(d.station)"
+      >
+        <span
+          class="w-3 h-3 rounded-full border-2 transition-all"
+          :style="{ borderColor: stationVisibility[d.station] ? 'white' : d.color, backgroundColor: stationVisibility[d.station] ? 'white' : 'transparent' }"
+        />
+        {{ d.station }}
+        <span class="text-xs opacity-75">({{ d.deltaSP.toFixed(2) }}s / {{ d.distance.toFixed(0) }}km)</span>
+      </button>
     </div>
 
     <!-- Chart -->
@@ -188,6 +269,7 @@ onUnmounted(() => {
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Estación</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Ts - Tp (s)</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Distancia (km)</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-600">Visible</th>
             </tr>
           </thead>
           <tbody>
@@ -195,14 +277,32 @@ onUnmounted(() => {
               v-for="(row, idx) in chartData"
               :key="row.station"
               class="border-t border-gray-50 hover:bg-gray-50 transition-colors"
+              :class="{ 'opacity-40': !stationVisibility[row.station] }"
             >
               <td class="px-4 py-3 text-gray-400">{{ idx + 1 }}</td>
-              <td class="px-4 py-3 font-bold text-igp-blue">{{ row.station }}</td>
+              <td class="px-4 py-3 font-bold" :style="{ color: row.color }">
+                <span class="inline-flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full inline-block" :style="{ backgroundColor: row.color }" />
+                  {{ row.station }}
+                </span>
+              </td>
               <td class="px-4 py-3">
                 <span class="font-mono font-semibold text-igp-blue">{{ row.deltaSP.toFixed(2) }}</span>
               </td>
               <td class="px-4 py-3">
                 <span class="font-mono font-semibold text-igp-blue">{{ row.distance.toFixed(1) }}</span>
+              </td>
+              <td class="px-4 py-3">
+                <button
+                  class="w-8 h-5 rounded-full transition-all cursor-pointer relative"
+                  :class="stationVisibility[row.station] ? 'bg-igp-green-700' : 'bg-gray-300'"
+                  @click="toggleStation(row.station)"
+                >
+                  <span
+                    class="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all"
+                    :class="stationVisibility[row.station] ? 'left-3.5' : 'left-0.5'"
+                  />
+                </button>
               </td>
             </tr>
           </tbody>

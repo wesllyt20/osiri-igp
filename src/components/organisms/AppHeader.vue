@@ -8,8 +8,8 @@ const mobileMenuOpen = ref(false)
 const scrolled = ref(false)
 
 const navLinks = [
-  { label: 'Inicio', to: '/', disabled: true },
-  { label: 'Guía Operador Sísmico', to: '/guia', disabled: true },
+  { label: 'Inicio', to: '/home', disabled: false },
+  { label: 'Guía Operador Sísmico', to: '/guia', disabled: false },
   { label: 'Reportes Sísmicos', to: '/reportes', disabled: false },
 ]
 

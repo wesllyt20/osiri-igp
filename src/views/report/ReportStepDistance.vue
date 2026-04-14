@@ -206,10 +206,10 @@ function goNext() {
                 <div class="flex items-center gap-2">
                   <button
                     v-if="!row.validated"
-                    class="px-3 py-1 text-xs font-semibold bg-igp-blue text-white rounded-lg hover:bg-igp-blue-800 transition-colors cursor-pointer"
+                    class="px-4 py-1 text-xs font-semibold bg-igp-blue text-white rounded-lg hover:bg-igp-blue-800 transition-colors cursor-pointer"
                     @click="validateDistance(row.station)"
                   >
-                    Validar
+                    Validar 
                   </button>
                   <button
                     v-else
@@ -219,8 +219,8 @@ function goNext() {
                     Corregir
                   </button>
                   <span
-                    v-if="row.validated"
                     class="inline-flex items-center gap-1 text-igp-green-700 text-xs font-semibold"
+                    :class="row.validated ? 'opacity-100' : 'opacity-0'"
                   >
                     <AppIcon name="check-circle" :size="14" />
                     OK

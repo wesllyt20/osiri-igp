@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, shallowRef } from 'vue'
+import { ref, computed, shallowRef, reactive } from 'vue'
 import { SEISMIC_RECORDS, STATIONS_CATALOG, SEISMIC_CONSTANTS, VALIDATION_TOLERANCE } from '@/data/seismicData'
 
 export const useReportStore = defineStore('report', () => {
@@ -10,7 +10,15 @@ export const useReportStore = defineStore('report', () => {
   const waveformCache = shallowRef({})
   const stationAnalysis = ref({})
 
-  const totalSteps = 6
+  // Persisted station inputs for step 2 (survives navigation between steps)
+  const savedStationInputs = reactive({})
+
+  // User-selected epicenter on map
+  const userEpicenter = ref(null)
+  // User-selected Richter magnitude
+  const userMagnitude = ref(null)
+
+  const totalSteps = 8
 
   const steps = [
     { id: 1, title: 'Seleccionar Sismo', icon: 'target', shortTitle: 'Selección' },
@@ -19,6 +27,8 @@ export const useReportStore = defineStore('report', () => {
     { id: 4, title: 'Distancia Epicentral', icon: 'crosshair', shortTitle: 'Distancia' },
     { id: 5, title: 'Gráfico S-P', icon: 'trending-up', shortTitle: 'Gráfico S-P' },
     { id: 6, title: 'Epicentro', icon: 'map-pin', shortTitle: 'Epicentro' },
+    { id: 7, title: 'Magnitud Richter', icon: 'zap', shortTitle: 'Magnitud' },
+    { id: 8, title: 'Reporte Sísmico', icon: 'file-text', shortTitle: 'Reporte' },
   ]
 
   const records = computed(() => SEISMIC_RECORDS)
@@ -46,10 +56,24 @@ export const useReportStore = defineStore('report', () => {
     return selectedRecord.value.correctValues?.[stationName] || null
   }
 
+  function setUserEpicenter(latlng) {
+    userEpicenter.value = latlng ? { lat: latlng.lat, lng: latlng.lng } : null
+  }
+
+  function setUserMagnitude(mag) {
+    userMagnitude.value = mag
+  }
+
   function selectRecord(id) {
     if (selectedRecordId.value !== id) {
       waveformCache.value = {}
       stationAnalysis.value = {}
+      userEpicenter.value = null
+      userMagnitude.value = null
+      // Clear saved station inputs when selecting a new sismo
+      Object.keys(savedStationInputs).forEach((k) => delete savedStationInputs[k])
+      // Reset completed steps
+      completedSteps.value = new Set()
     }
     selectedRecordId.value = id
   }
@@ -88,8 +112,34 @@ export const useReportStore = defineStore('report', () => {
 
   function prevStep() {
     if (currentStep.value > 1) {
+      // Remove completed state for current step and all future steps when going back
+      const newSet = new Set(completedSteps.value)
+      for (let i = currentStep.value; i <= totalSteps; i++) {
+        newSet.delete(i)
+      }
+      completedSteps.value = newSet
       currentStep.value--
     }
+  }
+
+  // When going back to step 1, clear all data (user is choosing a new sismo)
+  function goToStep1() {
+    currentStep.value = 1
+    completedSteps.value = new Set()
+    stationAnalysis.value = {}
+    Object.keys(savedStationInputs).forEach((k) => delete savedStationInputs[k])
+    waveformCache.value = {}
+    selectedRecordId.value = null
+  }
+
+  function saveStationInputs(inputs) {
+    Object.keys(inputs).forEach((k) => {
+      savedStationInputs[k] = { ...inputs[k] }
+    })
+  }
+
+  function getSavedStationInputs() {
+    return { ...savedStationInputs }
   }
 
   async function loadWaveformData(stationName) {
@@ -164,10 +214,13 @@ export const useReportStore = defineStore('report', () => {
 
   return {
     currentStep, completedSteps, selectedRecordId, waveformCache, stationAnalysis,
+    userEpicenter, userMagnitude,
     totalSteps, steps, records, selectedRecord, stations, progress,
     selectRecord, setStep, canGoToStep, markCompleted, isCompleted, nextStep, prevStep,
     loadWaveformData, clearWaveformCache, setStationAnalysis,
     getPreviewImages, getStationCoords, getCorrectValues, resetReport,
+    goToStep1, saveStationInputs, getSavedStationInputs, savedStationInputs,
+    setUserEpicenter, setUserMagnitude,
     SEISMIC_CONSTANTS, VALIDATION_TOLERANCE,
   }
 })
