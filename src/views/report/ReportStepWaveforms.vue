@@ -146,7 +146,7 @@ function renderSingleChart(data, idx) {
       title: { text: 'Amplitud (mm)', font: { size: 11 } },
       gridcolor: '#f0f0f0',
     },
-    margin: { l: 60, r: 20, t: 40, b: 50 },
+    margin: { l: window.innerWidth < 640 ? 40 : 60, r: 15, t: 35, b: 40 },
     paper_bgcolor: 'white',
     plot_bgcolor: 'white',
     showlegend: false,
@@ -320,10 +320,10 @@ onUnmounted(() => {
         <span class="inline-block px-3 py-1 bg-igp-blue-50 text-igp-blue text-xs font-bold uppercase tracking-wider rounded-full mb-3">
           Paso 2
         </span>
-        <h1 class="text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
           Formas de Onda Sísmicas
         </h1>
-        <p class="text-gray-500" v-if="selectedRecord">
+        <p class="text-sm text-gray-500" v-if="selectedRecord">
           Sismo #{{ selectedRecord.title }} — {{ selectedRecord.date }} a las {{ selectedRecord.time }}
         </p>
       </div>
@@ -346,7 +346,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Info box -->
-    <div class="bg-igp-sky-blue-50 border border-igp-sky-blue-200 rounded-xl p-4 mb-6 text-sm text-igp-sky-blue-800">
+    <div class="bg-igp-sky-blue-50 border border-igp-sky-blue-200 rounded-xl p-3 sm:p-4 mb-6 text-xs sm:text-sm text-igp-sky-blue-800">
       <p class="font-semibold mb-1">Instrucciones:</p>
       <p>Observa cada gráfico y usa el zoom para identificar las ondas P y S. Luego ingresa el tiempo de la Onda P, el tiempo de la Onda S y la amplitud máxima en los campos de la derecha. Haz clic en <strong>Validar</strong> para verificar y marcar las ondas en el gráfico.</p>
     </div>
@@ -393,7 +393,7 @@ onUnmounted(() => {
         <div class="flex flex-col lg:flex-row">
           <!-- Chart -->
           <div class="flex-1 min-w-0">
-            <div :id="'chart-' + idx" class="w-full" style="height: 300px" />
+            <div :id="'chart-' + idx" class="w-full" style="min-height: 250px; height: 300px" />
           </div>
 
           <!-- Input panel -->

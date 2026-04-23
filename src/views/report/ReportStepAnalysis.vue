@@ -44,10 +44,10 @@ function goNext() {
         <span class="inline-block px-3 py-1 bg-igp-blue-50 text-igp-blue text-xs font-bold uppercase tracking-wider rounded-full mb-3">
           Paso 3
         </span>
-        <h1 class="text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
           Resumen de Datos Obtenidos
         </h1>
-        <p class="text-gray-500" v-if="selectedRecord">
+        <p class="text-sm text-gray-500" v-if="selectedRecord">
           Sismo: {{ selectedRecord.title }} — Datos recopilados de {{ analysisRows.length }} estaciones
         </p>
       </div>

@@ -83,10 +83,10 @@ async function finishReport() {
         <span class="inline-block px-3 py-1 bg-igp-blue-50 text-igp-blue text-xs font-bold uppercase tracking-wider rounded-full mb-3">
           Paso 8
         </span>
-        <h1 class="text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
           Reporte Sísmico
         </h1>
-        <p class="text-gray-500" v-if="selectedRecord">
+        <p class="text-sm text-gray-500" v-if="selectedRecord">
           {{ selectedRecord.title }} — Resumen final del análisis
         </p>
       </div>
@@ -103,7 +103,7 @@ async function finishReport() {
     </div>
 
     <!-- Report header card -->
-    <div class="bg-linear-to-br from-igp-blue to-igp-blue-ocean-800 rounded-2xl p-8 text-white relative overflow-hidden mb-6">
+    <div class="bg-linear-to-br from-igp-blue to-igp-blue-ocean-800 rounded-2xl p-5 sm:p-8 text-white relative overflow-hidden mb-6">
       <div class="absolute top-0 right-0 w-40 h-40 bg-igp-sky-blue-600/10 rounded-full -translate-y-1/2 translate-x-1/2" />
       <div class="absolute bottom-0 left-0 w-32 h-32 bg-igp-sky-blue-600/5 rounded-full translate-y-1/2 -translate-x-1/2" />
 
@@ -192,7 +192,7 @@ async function finishReport() {
     </div>
 
     <!-- Observations -->
-    <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm mb-6">
+    <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm mb-6">
       <h3 class="text-lg font-bold text-igp-blue mb-3">Observaciones</h3>
       <p class="text-gray-600 leading-relaxed">
         {{ selectedRecord?.info?.observaciones || 'Sin observaciones disponibles.' }}
@@ -200,7 +200,7 @@ async function finishReport() {
     </div>
 
     <!-- Epicenter info -->
-    <div v-if="store.userEpicenter" class="bg-igp-sky-blue-50 rounded-2xl border border-igp-sky-blue-200 p-6 mb-6">
+    <div v-if="store.userEpicenter" class="bg-igp-sky-blue-50 rounded-2xl border border-igp-sky-blue-200 p-4 sm:p-6 mb-6">
       <h3 class="text-base font-bold text-igp-blue mb-2 flex items-center gap-2">
         <AppIcon name="map-pin" :size="18" class="text-igp-sky-blue-600" />
         Epicentro determinado

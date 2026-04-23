@@ -197,10 +197,10 @@ onUnmounted(() => {
         <span class="inline-block px-3 py-1 bg-igp-blue-50 text-igp-blue text-xs font-bold uppercase tracking-wider rounded-full mb-3">
           Paso 5
         </span>
-        <h1 class="text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
           Gráfico S-P vs Distancia
         </h1>
-        <p class="text-gray-500" v-if="selectedRecord">
+        <p class="text-sm text-gray-500" v-if="selectedRecord">
           {{ selectedRecord.title }} — Relación tiempo-distancia
         </p>
       </div>
@@ -217,7 +217,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Info box -->
-    <div class="bg-igp-sky-blue-50 border border-igp-sky-blue-200 rounded-xl p-4 mb-6 text-sm text-igp-sky-blue-800">
+    <div class="bg-igp-sky-blue-50 border border-igp-sky-blue-200 rounded-xl p-3 sm:p-4 mb-6 text-xs sm:text-sm text-igp-sky-blue-800">
       <p class="font-semibold mb-1">¿Qué muestra este gráfico?</p>
       <p>
         La relación entre la diferencia de tiempos de llegada de las ondas S y P (ΔT = Ts - Tp) y la distancia epicentral.
@@ -252,7 +252,7 @@ onUnmounted(() => {
         <AppIcon name="trending-up" :size="20" class="text-igp-sky-blue-600" />
         <h2 class="text-lg font-bold text-igp-blue">Gráfico S-P vs Distancia</h2>
       </div>
-      <div id="sp-chart" class="w-full" style="height: 450px" />
+      <div id="sp-chart" class="w-full" style="height: 350px; min-height: 300px" />
     </div>
 
     <!-- Data table -->
@@ -311,7 +311,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Formula reminder -->
-    <div class="bg-igp-blue rounded-2xl p-6 text-white mb-8">
+    <div class="bg-igp-blue rounded-2xl p-4 sm:p-6 text-white mb-8">
       <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
         <AppIcon name="info" :size="20" class="text-igp-sky-blue-300" />
         Fórmula utilizada

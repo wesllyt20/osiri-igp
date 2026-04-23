@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import AppHeader from '@/components/organisms/AppHeader.vue'
 import AppCintillo from '@/components/organisms/AppCintillo.vue'
 import AppIcon from '@/components/atoms/AppIcon.vue'
@@ -7,6 +7,15 @@ import SeismicDetailTabs from '@/components/organisms/SeismicDetailTabs.vue'
 import { useReportStore } from '@/stores/reportStore'
 
 const store = useReportStore()
+const mainContentRef = ref(null)
+
+watch(() => store.currentStep, () => {
+  nextTick(() => {
+    if (mainContentRef.value) {
+      mainContentRef.value.scrollTop = 0
+    }
+  })
+})
 
 const steps = computed(() => store.steps)
 const currentStep = computed(() => store.currentStep)
@@ -201,41 +210,126 @@ function handleNextStep() {
       <!-- Column 3: Main Content (Tabs) -->
       <main class="flex-1 overflow-hidden flex flex-col">
         <!-- Mobile header -->
-        <div class="lg:hidden bg-white border-b border-gray-200 px-4 py-3">
-          <div class="flex items-center gap-2 overflow-x-auto">
-            <div
-              v-for="step in steps"
-              :key="step.id"
-              class="flex items-center gap-1 shrink-0"
-            >
+        <div class="lg:hidden bg-white border-b border-gray-200 px-3 py-2.5">
+          <div class="flex items-center gap-2">
+            <!-- Step progress dots -->
+            <div class="flex items-center gap-1 overflow-x-auto flex-1 py-0.5">
               <div
-                class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                :class="[
-                  currentStep === step.id
-                    ? 'bg-igp-dark-blue text-white'
-                    : store.isCompleted(step.id)
-                      ? 'bg-igp-green-700 text-white'
-                      : 'bg-gray-200 text-gray-400'
-                ]"
+                v-for="step in steps"
+                :key="step.id"
+                class="flex items-center gap-1 shrink-0"
               >
-                <AppIcon
-                  v-if="store.isCompleted(step.id) && currentStep !== step.id"
-                  name="check"
-                  :size="12"
+                <div
+                  class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                  :class="[
+                    currentStep === step.id
+                      ? 'bg-igp-dark-blue text-white'
+                      : store.isCompleted(step.id)
+                        ? 'bg-igp-green-700 text-white'
+                        : 'bg-gray-200 text-gray-400'
+                  ]"
+                >
+                  <AppIcon
+                    v-if="store.isCompleted(step.id) && currentStep !== step.id"
+                    name="check"
+                    :size="12"
+                  />
+                  <span v-else>{{ step.id }}</span>
+                </div>
+                <span
+                  v-if="step.id < steps.length"
+                  class="w-3 h-0.5 bg-gray-200"
+                  :class="{ 'bg-igp-green-700': store.isCompleted(step.id) }"
                 />
-                <span v-else>{{ step.id }}</span>
               </div>
-              <span
-                v-if="step.id < steps.length"
-                class="w-4 h-0.5 bg-gray-200"
-                :class="{ 'bg-igp-green-700': store.isCompleted(step.id) }"
-              />
+            </div>
+            <!-- Mobile: Cambiar sismo button (step >= 2) -->
+            <button
+              v-if="currentStep >= 2"
+              class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-igp-orange-50 text-igp-orange-700 hover:bg-igp-orange-100 transition-colors cursor-pointer"
+              @click="handleChangeSeismo"
+            >
+              <AppIcon name="refresh-cw" :size="12" />
+              <span class="hidden sm:inline">Cambiar sismo</span>
+            </button>
+          </div>
+          <!-- Mobile: Current step label -->
+          <p v-if="currentStep >= 2" class="text-[10px] text-gray-400 mt-1 truncate">
+            Paso {{ currentStep }}: {{ steps.find(s => s.id === currentStep)?.title }}
+          </p>
+        </div>
+
+        <!-- Mobile: Back to earthquake list (step 1, quake selected) -->
+        <div v-if="currentStep === 1 && selectedQuake" class="lg:hidden bg-white border-b border-gray-100 px-3 py-2">
+          <button
+            class="flex items-center gap-1.5 text-sm font-semibold text-igp-blue hover:text-igp-dark-blue transition-colors cursor-pointer"
+            @click="selectedQuake = null; store.selectRecord(null)"
+          >
+            <AppIcon name="arrow-left" :size="14" />
+            <span>Volver a la lista de eventos</span>
+          </button>
+        </div>
+
+        <!-- Mobile earthquake list (step 1, no quake selected) -->
+        <div v-if="currentStep === 1 && !selectedQuake" class="lg:hidden flex-1 overflow-y-auto bg-gray-50">
+          <div class="p-4">
+            <!-- Header -->
+            <div class="text-center mb-5">
+              <div class="inline-flex items-center gap-2 px-3 py-1 bg-igp-dark-blue/10 text-igp-dark-blue text-xs font-bold uppercase tracking-wider rounded-full mb-3">
+                <AppIcon name="activity" :size="14" />
+                <span>Sistema de Reportes</span>
+              </div>
+              <h2 class="text-xl font-extrabold text-gray-800">Selecciona un evento sísmico</h2>
+              <p class="text-sm text-gray-500 mt-1">{{ records.length }} registros disponibles</p>
+            </div>
+            <!-- Earthquake cards -->
+            <div class="space-y-2">
+              <button
+                v-for="(record, idx) in records"
+                :key="record.id"
+                class="w-full text-left p-3 bg-white rounded-xl border border-gray-200 hover:border-igp-blue hover:shadow-md transition-all duration-200 group cursor-pointer animate-fadeSlideIn"
+                :style="{ animationDelay: (idx * 50) + 'ms' }"
+                @click="selectQuake(record)"
+              >
+                <div class="flex items-center gap-3">
+                  <div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-gray-200">
+                    <img
+                      :src="getEpicentroUrl(record.id)"
+                      :alt="record.title"
+                      class="w-full h-full object-cover"
+                      loading="lazy"
+                      @error="(e) => { e.target.src = getEpicentroFallback(record.id) }"
+                    />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-bold text-gray-800 truncate">{{ record.title }}</p>
+                    <p class="text-xs text-gray-400 truncate">{{ record.subtitle }}</p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="text-[10px] text-gray-400">{{ formatDateShort(record.date) }}</span>
+                      <span
+                        v-if="record.info?.magnitud"
+                        class="text-[10px] font-bold px-1.5 py-0.5 bg-igp-orange-50 text-igp-orange-600 rounded"
+                      >
+                        {{ record.info.magnitud }}
+                      </span>
+                    </div>
+                  </div>
+                  <AppIcon name="chevron-right" :size="16" class="text-gray-300 group-hover:text-igp-blue shrink-0 transition-colors" />
+                </div>
+              </button>
             </div>
           </div>
         </div>
 
-        <SeismicDetailTabs v-if="currentStep === 1" :record="selectedQuake" @next-step="handleNextStep" />
-        <div v-else class="flex-1 overflow-y-auto">
+        <!-- SeismicDetailTabs: hidden on mobile when no quake selected, always on desktop -->
+        <SeismicDetailTabs
+          v-if="currentStep === 1"
+          :record="selectedQuake"
+          @next-step="handleNextStep"
+          class="flex-1"
+          :class="{ 'hidden lg:flex': !selectedQuake }"
+        />
+        <div v-if="currentStep !== 1" ref="mainContentRef" class="flex-1 overflow-y-auto">
           <slot />
         </div>
       </main>

@@ -310,10 +310,10 @@ onUnmounted(() => {
         <span class="inline-block px-3 py-1 bg-igp-blue-50 text-igp-blue text-xs font-bold uppercase tracking-wider rounded-full mb-3">
           Paso 6
         </span>
-        <h1 class="text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
           Localización del Epicentro
         </h1>
-        <p class="text-gray-500" v-if="selectedRecord">
+        <p class="text-sm text-gray-500" v-if="selectedRecord">
           {{ selectedRecord.title }} — Haz clic en el mapa para ubicar el epicentro
         </p>
       </div>
@@ -330,7 +330,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Info box -->
-    <div class="bg-igp-sky-blue-50 border border-igp-sky-blue-200 rounded-xl p-4 mb-6 text-sm text-igp-sky-blue-800">
+    <div class="bg-igp-sky-blue-50 border border-igp-sky-blue-200 rounded-xl p-3 sm:p-4 mb-6 text-xs sm:text-sm text-igp-sky-blue-800">
       <p class="font-semibold mb-1">Método de localización</p>
       <p>
         Observa la intersección de los círculos de distancia en el mapa. Haz clic en el punto donde convergen
@@ -389,7 +389,7 @@ onUnmounted(() => {
 
     <!-- Map -->
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
-      <div id="epicenter-map" class="w-full" style="height: 500px" />
+      <div id="epicenter-map" class="w-full" style="height: 400px; min-height: 300px" />
     </div>
 
     <!-- Station info table -->
@@ -448,12 +448,12 @@ onUnmounted(() => {
     </div>
 
     <!-- Seismic Info -->
-    <div class="bg-igp-blue rounded-2xl p-6 text-white mb-8">
+    <div class="bg-igp-blue rounded-2xl p-4 sm:p-6 text-white mb-8">
       <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
         <AppIcon name="target" :size="20" class="text-igp-sky-blue-300" />
         Información del Sismo
       </h3>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         <div class="bg-white/10 rounded-xl p-3">
           <p class="text-xs text-gray-300 mb-1">Magnitud</p>
           <p class="text-lg font-bold text-gray-400 italic">Siguiente paso</p>

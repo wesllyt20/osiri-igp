@@ -111,10 +111,10 @@ function goNext() {
         <span class="inline-block px-3 py-1 bg-igp-blue-50 text-igp-blue text-xs font-bold uppercase tracking-wider rounded-full mb-3">
           Paso 4
         </span>
-        <h1 class="text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
           Distancia Epicentral
         </h1>
-        <p class="text-gray-500" v-if="selectedRecord">
+        <p class="text-sm text-gray-500" v-if="selectedRecord">
           Sismo: {{ selectedRecord.title }} — Cálculo de distancia epicentral por estación
         </p>
       </div>
@@ -137,7 +137,7 @@ function goNext() {
     </div>
 
     <!-- Formula explanation -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8">
       <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <h4 class="font-bold text-igp-blue mb-2 text-base">Diferencia S - P</h4>
         <p class="text-sm text-gray-500 mb-4">
@@ -237,7 +237,7 @@ function goNext() {
     </div>
 
     <!-- Calculation example -->
-    <div class="bg-igp-blue rounded-2xl p-6 text-white mb-8">
+    <div class="bg-igp-blue rounded-2xl p-4 sm:p-6 text-white mb-8">
       <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
         <AppIcon name="calculator" :size="20" class="text-igp-sky-blue-400" />
         Ejemplo de cálculo

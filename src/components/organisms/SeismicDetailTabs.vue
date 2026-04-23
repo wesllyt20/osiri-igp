@@ -259,12 +259,12 @@ const infoItems = computed(() => {
   <!-- ═══ RECORD SELECTED ═══ -->
   <div v-if="record" class="h-full flex flex-col" :class="contentVisible ? 'animate-fadeSlideIn' : 'opacity-0'">
     <!-- Tab header + Next step button -->
-    <div class="flex items-end border-b border-gray-200 bg-white px-2 pt-2 shrink-0">
-      <div class="flex gap-1">
+    <div class="flex items-end border-b border-gray-200 bg-white px-1 sm:px-2 pt-2 shrink-0">
+      <div class="flex gap-0.5 sm:gap-1 flex-1 min-w-0">
         <button
           v-for="tab in tabs"
           :key="tab.id"
-          class="relative flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-xl transition-all duration-200 cursor-pointer"
+          class="relative flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 text-[11px] sm:text-sm font-semibold rounded-t-xl transition-all duration-200 cursor-pointer whitespace-nowrap"
           :class="
             activeTab === tab.id
               ? 'bg-igp-blue text-white shadow-md -mb-px z-10'
@@ -272,20 +272,21 @@ const infoItems = computed(() => {
           "
           @click="selectTab(tab.id)"
         >
-          <AppIcon :name="tab.icon" :size="16" />
-          <span>{{ tab.label }}</span>
+          <AppIcon :name="tab.icon" :size="14" class="sm:hidden" />
+          <AppIcon :name="tab.icon" :size="16" class="hidden sm:block" />
+          <span class="hidden sm:inline">{{ tab.label }}</span>
           <span
             v-if="isUnviewed(tab.id)"
-            class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-igp-orange-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg animate-bounce-gentle"
+            class="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-4 h-4 sm:w-5 sm:h-5 bg-igp-orange-500 text-white text-[8px] sm:text-[10px] font-black rounded-full flex items-center justify-center shadow-lg animate-bounce-gentle"
           >
             !
           </span>
         </button>
       </div>
       <!-- Siguiente paso button -->
-      <div class="ml-auto pb-1.5 pr-1">
+      <div class="pb-1 sm:pb-1.5 pr-0.5 sm:pr-1 shrink-0">
         <button
-          class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300"
+          class="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-sm font-bold transition-all duration-300"
           :class="
             allTabsViewed
               ? 'bg-igp-green-700 text-white hover:bg-igp-green-800 shadow-md cursor-pointer'
@@ -294,8 +295,10 @@ const infoItems = computed(() => {
           :disabled="!allTabsViewed"
           @click="handleNextStep"
         >
-          <span>Siguiente paso</span>
-          <AppIcon name="arrow-right" :size="16" />
+          <span class="hidden sm:inline">Siguiente paso</span>
+          <span class="sm:hidden">Siguiente</span>
+          <AppIcon name="arrow-right" :size="14" class="sm:hidden" />
+          <AppIcon name="arrow-right" :size="16" class="hidden sm:block" />
         </button>
       </div>
     </div>
@@ -325,10 +328,10 @@ const infoItems = computed(() => {
         <div
           class="flex-1 grid gap-3"
           :class="[
-            waveformImages.length <= 2 ? 'grid-cols-2' : 'grid-cols-2',
+            waveformImages.length <= 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2',
             waveformImages.length === 1 ? 'grid-cols-1' : ''
           ]"
-          :style="waveformImages.length <= 2 ? 'grid-template-rows: 1fr' : 'grid-template-rows: 1fr 1fr'"
+          :style="waveformImages.length <= 2 ? '' : 'grid-template-rows: auto'"
         >
           <div
             v-for="(img, idx) in waveformImages"
@@ -336,7 +339,7 @@ const infoItems = computed(() => {
             class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col animate-fadeSlideIn"
             :style="{ animationDelay: (idx * 80) + 'ms' }"
             :class="[
-              waveformImages.length === 3 && idx === 2 ? 'col-span-2 max-w-[50%] mx-auto w-full' : ''
+              waveformImages.length === 3 && idx === 2 ? 'sm:col-span-2 sm:max-w-[50%] sm:mx-auto w-full' : ''
             ]"
           >
             <div class="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2 shrink-0">
@@ -427,7 +430,7 @@ const infoItems = computed(() => {
 
   <!-- ═══ EMPTY STATE ═══ -->
   <div v-else class="h-full flex items-center justify-center bg-gray-50 overflow-hidden">
-    <div class="max-w-2xl w-full px-8 animate-fadeSlideIn">
+    <div class="max-w-2xl w-full px-4 sm:px-8 animate-fadeSlideIn">
       <div class="flex flex-col items-center">
         <!-- Header -->
         <div class="mb-6 text-center">
@@ -443,7 +446,7 @@ const infoItems = computed(() => {
         </div>
 
         <!-- Epicentro images carousel -->
-        <div class="grid grid-cols-3 gap-3 mb-6 w-full max-w-lg">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6 w-full max-w-lg">
           <div
             v-for="(rec, idx) in previewRecords.slice(0, 3)"
             :key="rec.id"
@@ -465,7 +468,7 @@ const infoItems = computed(() => {
         </div>
 
         <!-- Features row -->
-        <div class="grid grid-cols-3 gap-3 mb-6 w-full max-w-lg animate-fadeSlideIn" style="animation-delay: 500ms">
+        <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-6 w-full max-w-lg animate-fadeSlideIn" style="animation-delay: 500ms">
           <div class="text-center p-3 bg-white rounded-xl border border-gray-100">
             <AppIcon name="map-pin" :size="20" class="text-igp-dark-blue mx-auto mb-1" />
             <p class="text-[10px] font-semibold text-gray-600">Estaciones</p>
@@ -480,8 +483,8 @@ const infoItems = computed(() => {
           </div>
         </div>
 
-        <!-- CTA arrow -->
-        <div class="flex items-center gap-3 bg-igp-dark-blue/5 px-5 py-3 rounded-xl animate-fadeSlideIn" style="animation-delay: 600ms">
+        <!-- CTA arrow (desktop only, mobile has inline list) -->
+        <div class="hidden lg:flex items-center gap-3 bg-igp-dark-blue/5 px-5 py-3 rounded-xl animate-fadeSlideIn" style="animation-delay: 600ms">
           <svg class="w-7 h-7 text-igp-dark-blue animate-bounce-left shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12" />
             <polyline points="12 19 5 12 12 5" />

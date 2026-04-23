@@ -52,35 +52,150 @@ const avgMagnitude = computed(() => {
   return mags.reduce((a, b) => a + b, 0) / mags.length
 })
 
-// ── Nomogram drawing ──
-// Three vertical log axes: Distance (left), Magnitude (center), Amplitude (right)
-// Distance: 20-800 km (log)
-// Magnitude: 1.0-8.0 (linear)
-// Amplitude: 0.1-500 mm (log)
+// ── Nomogram de Richter ──
+// Geometría de triple eje: tres ejes verticales paralelos alineados a la misma altura.
+// Magnitud (1.0–8.0) es el eje REFERENCIA (centro, lineal).
+// Amplitud (0.1–500 mm, logarítmico) comienza exactamente a la altura de M=1.0.
+// Distancia (derivada matemáticamente, logarítmico) se alinea por la fórmula de Richter.
+//
+// Fórmula: ML = log₁₀(A) + 2.76 × log₁₀(D) − 2.48
+//
+// Normalización a [0,1]:
+//   yMagnitud = (M − 1) / 7
+//   yAmplitud = (log₁₀(A) − log₁₀(0.1)) / (log₁₀(500) − log₁₀(0.1))
+//   yDistancia = (log₁₀(D) − log₁₀(D_min)) / (log₁₀(D_max) − log₁₀(D_min))
+//
+// Nomograma de Richter: ML = log₁₀(A) + 2.76 × log₁₀(D) − 2.48
+// α = 2.76 / (1 + 2.76) ≈ 0.7340  (proporción del coeficiente de distancia)
+//
+// Los tres ejes comparten un mismo factor de escala vertical k (px por unidad log).
+// - Eje derecho (Amplitud): yA = refY − k · log₁₀(A)
+// - Eje izquierdo (Distancia): yD = refY − k · 2.76 · log₁₀(D)
+// - Eje central (Magnitud): yM = refY − k · (M + 2.48)
+//
+// Verificación de anclaje: D=100, A=1 → ML = 0 + 2.76·2 − 2.48 = 3.04 ✓
 
-const NOMO = {
-  distMin: 20, distMax: 800,
-  magMin: 1.0, magMax: 8.0,
-  ampMin: 0.1, ampMax: 500,
-  padTop: 50, padBottom: 60, padLeft: 70, padRight: 70,
-  axisSpacing: 0, // computed at render
-}
+const NOMO = (() => {
+  // Fórmula: ML = log₁₀(A) + 2.76·log₁₀(D) − 2.48
+  const coefDist = 2.76
+  const calibConst = -2.48
 
-function logPos(val, min, max, pxTop, pxBottom) {
-  const logMin = Math.log10(min)
-  const logMax = Math.log10(max)
-  const frac = (Math.log10(val) - logMin) / (logMax - logMin)
-  return pxBottom - frac * (pxBottom - pxTop)
-}
+  // α = coefDist / (1 + coefDist) ≈ 0.7340
+  const alpha = coefDist / (1 + coefDist)
 
-function linPos(val, min, max, pxTop, pxBottom) {
-  const frac = (val - min) / (max - min)
-  return pxBottom - frac * (pxBottom - pxTop)
-}
+  // Magnitud: rango visible en el eje central
+  const magMin = 1.0, magMax = 8.0
+  const magRange = magMax - magMin // 7.0
 
-function yToMag(y, pxTop, pxBottom) {
-  const frac = (pxBottom - y) / (pxBottom - pxTop)
-  return NOMO.magMin + frac * (NOMO.magMax - NOMO.magMin)
+  // Amplitud: rango logarítmico (mm)
+  const ampMin = 0.1, ampMax = 500
+  const logAmpMin = Math.log10(ampMin) // −1
+  const logAmpMax = Math.log10(ampMax) // ~2.699
+  const logAmpRange = logAmpMax - logAmpMin // ~3.699
+
+  // Factor de escala unificado: k unidades lógicas = magRange + 2.48 abarca el eje central
+  // El eje de magnitud cubre (magMin+calibConst) a (magMax+calibConst) en unidades internas
+  // = (1−2.48)=−1.48 a (8−2.48)=5.52, rango interno = 7.0
+  // Usamos magRange como la altura lógica total del eje de magnitud.
+  // El eje de amplitud cubre logAmpRange unidades log → su altura en px = k·logAmpRange
+  // El eje de distancia cubre logAmpRange·coefDist/(1) ... derivamos de la geometría.
+
+  // Altura lógica total (en unidades de "magnitud interna"): magRange
+  // Amplitud lógica: logAmpRange, mapeada al mismo espacio → k = magRange / logAmpRange? No.
+  // Correcto: los tres ejes tienen LA MISMA altura en píxeles.
+  // Para que la geometría funcione con α, necesitamos:
+  //   escala_amp = 1 unidad log amp por unidad de altura normalizada
+  //   escala_dist = coefDist unidades log dist equivalen a 1 unidad de altura normalizada (comprimida)
+  //   escala_mag = (M + calibConst) mapeada linealmente
+  //
+  // Normalizamos todo al rango [0,1] usando la escala del eje de magnitud como referencia.
+  // Sea S = magRange (= 7.0) la altura lógica.
+  // Amp: logAmpRange unidades log → normalizamos a [0, logAmpRange/S]... pero todos deben ir de 0 a 1.
+  //
+  // Enfoque directo: todos los ejes van de bot a top (misma altura en px).
+  // Definimos para cada eje su propio rango y normalizamos a [0,1] independientemente,
+  // PERO los rangos deben satisfacer: logAmpRange = S y coefDist·logDistRange = S
+  // para que la interpolación lineal con α funcione.
+
+  // Rango log de amplitud fijo → S = logAmpRange ≈ 3.699
+  // Rango log de distancia: logDistRange = S / coefDist ≈ 1.340
+  // Rango de magnitud: magRange_eff = S (en unidades de M+calibConst)
+  //   → M va de M_bot a M_bot + S, donde M_bot se elige para cubrir el rango deseado.
+
+  // Elegimos M_bot y M_top para cubrir magMin..magMax:
+  // M_bot + calibConst corresponde al fondo del eje → M_bot = magMin
+  // M_top = magMin + logAmpRange → ≈ 1.0 + 3.699 = 4.699... eso no cubre hasta 8.
+  // Problema: logAmpRange < magRange, así que el eje de amplitud es "más corto" que el de magnitud.
+  // Solución: ampliamos el rango de amplitud y distancia para cubrir magRange.
+
+  // Para que los tres ejes tengan la misma altura y cubran magMin a magMax:
+  // S = magRange = 7.0
+  // logAmpRange_needed = S = 7.0 → ampMin a ampMax cubre 7 órdenes de magnitud? No, eso es mucho.
+  //
+  // En realidad, en el nomograma clásico los ejes NO tienen el mismo rango lógico.
+  // La clave es que todos comparten el mismo factor k (px por unidad log).
+  // Los ejes pueden tener diferentes longitudes en píxeles, O usamos el mismo alto
+  // y ajustamos los rangos.
+  //
+  // Approach final: todos los ejes misma altura (top a bot).
+  // k = (bot - top) / S, donde S es el rango lógico maestro.
+  // Elegimos S = magRange = 7.0 (cubre M=1 a M=8).
+  // Entonces:
+  //   Amplitud: cubre S unidades log → logAmpMin_eff a logAmpMin_eff + S
+  //   Distancia: cubre S/coefDist unidades log → logDistMin_eff a logDistMin_eff + S/coefDist
+
+  const S = magRange // 7.0 = rango maestro
+
+  // Amplitud efectiva: necesitamos 7 unidades log → 10^(-1) a 10^(6) = 0.1 a 1,000,000 mm
+  // Eso es demasiado amplio. En la práctica, solo dibujamos ticks donde hay datos.
+  // Mantenemos ampMin=0.1 y ampMax_eff = 10^(logAmpMin + S) = 10^6. Los ticks visibles serán pocos.
+  const logAmpMin_eff = logAmpMin // −1
+  const logAmpMax_eff = logAmpMin_eff + S // 6.0
+  const ampMax_eff = Math.pow(10, logAmpMax_eff)
+
+  // Distancia efectiva: S/coefDist ≈ 2.536 unidades log
+  const logDistRange_eff = S / coefDist
+  // Anclaje: cuando A=ampMin (fondo amp) y M=magMin (fondo mag):
+  // magMin = logAmpMin + coefDist·log₁₀(D_bot) + calibConst
+  // → log₁₀(D_bot) = (magMin - calibConst - logAmpMin) / coefDist
+  const logDistMin_eff = (magMin - calibConst - logAmpMin_eff) / coefDist
+  // = (1 + 2.48 + 1) / 2.76 = 4.48/2.76 ≈ 1.6232
+  const logDistMax_eff = logDistMin_eff + logDistRange_eff
+  const distMin = Math.pow(10, logDistMin_eff)
+  const distMax = Math.pow(10, logDistMax_eff)
+
+  return {
+    magMin, magMax, magRange, S,
+    coefDist, calibConst,
+    ampMin, ampMax: ampMax_eff, logAmpMin: logAmpMin_eff, logAmpMax: logAmpMax_eff, logAmpRange: S,
+    distMin, distMax, logDistMin: logDistMin_eff, logDistMax: logDistMax_eff, logDistRange: logDistRange_eff,
+    alpha,
+    padTop: 50, padBottom: 60, padLeft: 80, padRight: 80,
+  }
+})()
+
+// ── Funciones de mapeo valor → pixel Y ──
+// Todos los ejes comparten la misma altura (top ↔ bot) y el rango maestro S.
+// Normalización a [0,1]: 0 = fondo (bot), 1 = tope (top).
+function normToY(t, top, bot) { return bot - t * (bot - top) }
+
+// Magnitud: lineal, M ∈ [magMin, magMax] → [0, 1]
+function normMag(M) { return (M - NOMO.magMin) / NOMO.S }
+function magToY(M, top, bot) { return normToY(normMag(M), top, bot) }
+
+// Amplitud: log₁₀, cubre S unidades log (misma escala que magnitud)
+function normAmp(A) { return (Math.log10(A) - NOMO.logAmpMin) / NOMO.S }
+function ampToY(A, top, bot) { return normToY(normAmp(A), top, bot) }
+
+// Distancia: log₁₀ × coefDist, cubre S/coefDist unidades log → escalado a [0,1]
+function normDist(D) { return (Math.log10(D) - NOMO.logDistMin) / NOMO.logDistRange }
+function distToY(D, top, bot) { return normToY(normDist(D), top, bot) }
+
+// Pixel Y → Magnitud (inversa para clicks en el eje central)
+// Incluye la calibración: la posición en el eje central corresponde a M directamente.
+function yToMag(y, top, bot) {
+  const t = (bot - y) / (bot - top)
+  return NOMO.magMin + t * NOMO.S
 }
 
 function renderNomogram() {
@@ -89,7 +204,8 @@ function renderNomogram() {
   const dpr = window.devicePixelRatio || 1
   const rect = canvas.parentElement.getBoundingClientRect()
   const W = rect.width
-  const H = 560
+  const isMobile = W < 500
+  const H = isMobile ? 420 : 560
 
   canvas.width = W * dpr
   canvas.height = H * dpr
@@ -104,94 +220,129 @@ function renderNomogram() {
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, W, H)
 
-  const top = NOMO.padTop
-  const bot = H - NOMO.padBottom
-  const xLeft = NOMO.padLeft
-  const xRight = W - NOMO.padRight
-  const xMid = (xLeft + xRight) / 2
+  const padTop = isMobile ? 40 : NOMO.padTop
+  const padBottom = isMobile ? 40 : NOMO.padBottom
+  const padLeft = isMobile ? 50 : NOMO.padLeft
+  const padRight = isMobile ? 50 : NOMO.padRight
+  const top = padTop
+  const bot = H - padBottom
+  const xLeft = padLeft
+  const xRight = W - padRight
+  // Eje central a la posición α derivada de la fórmula
+  const xMid = xLeft + NOMO.alpha * (xRight - xLeft)
 
-  // ── Draw three vertical axes ──
+  // ── Líneas de referencia horizontales para magnitudes enteras ──
+  ctx.setLineDash([4, 4])
+  ctx.strokeStyle = '#e5e7eb'
+  ctx.lineWidth = 0.7
+  for (let m = 2; m <= 7; m++) {
+    const y = magToY(m, top, bot)
+    ctx.beginPath(); ctx.moveTo(xLeft, y); ctx.lineTo(xRight, y); ctx.stroke()
+  }
+  ctx.setLineDash([])
+
+  // ── Dibujar los tres ejes verticales (misma altura) ──
   ctx.strokeStyle = '#1f2937'
   ctx.lineWidth = 2
-
-  // Left axis - Distance
+  // Izquierdo – Distancia
   ctx.beginPath(); ctx.moveTo(xLeft, top); ctx.lineTo(xLeft, bot); ctx.stroke()
-  // Center axis - Magnitude
+  // Centro – Magnitud (ligeramente más grueso)
+  ctx.lineWidth = 2.5
   ctx.beginPath(); ctx.moveTo(xMid, top); ctx.lineTo(xMid, bot); ctx.stroke()
-  // Right axis - Amplitude
+  ctx.lineWidth = 2
+  // Derecho – Amplitud
   ctx.beginPath(); ctx.moveTo(xRight, top); ctx.lineTo(xRight, bot); ctx.stroke()
 
+  // ── Títulos de ejes ──
   ctx.textAlign = 'center'
   ctx.font = 'bold 13px Poppins, sans-serif'
   ctx.fillStyle = '#1f2937'
-  ctx.fillText('Distancia', xLeft, H - 10)
-  ctx.fillText('(kilómetros)', xLeft, H - 0)
-  ctx.fillText('Magnitud', xMid, H - 10)
-  ctx.fillText('Richter', xMid, H - 0)
-  ctx.fillText('Amplitud', xRight, H - 10)
-  ctx.fillText('(milímetros)', xRight, H - 0)
+  ctx.fillText('Distancia', xLeft, top - 22)
+  ctx.font = '11px Poppins, sans-serif'
+  ctx.fillText('(km)', xLeft, top - 8)
+  ctx.font = 'bold 13px Poppins, sans-serif'
+  ctx.fillText('Magnitud', xMid, top - 22)
+  ctx.font = '11px Poppins, sans-serif'
+  ctx.fillText('Richter', xMid, top - 8)
+  ctx.font = 'bold 13px Poppins, sans-serif'
+  ctx.fillText('Amplitud', xRight, top - 22)
+  ctx.font = '11px Poppins, sans-serif'
+  ctx.fillText('(mm)', xRight, top - 8)
 
   // Title
   ctx.font = 'bold 18px Poppins, sans-serif'
   ctx.fillStyle = '#00214f'
-  ctx.fillText('El Nomograma de Richter', W / 2, 28)
 
-  // ── Distance ticks (left axis, log) ──
-  const distTicks = [20, 30, 40, 60, 80, 100, 200, 300, 400, 500, 600, 700, 800]
+  // ── Ticks de Distancia (eje izquierdo, log₁₀) ──
+  const distTicks = [50, 60, 80, 100, 150, 200, 300, 400, 500, 600, 800, 1000, 2000, 5000, 10000]
   ctx.font = '11px Poppins, sans-serif'
   ctx.fillStyle = '#374151'
   ctx.textAlign = 'right'
   distTicks.forEach((d) => {
-    const y = logPos(d, NOMO.distMin, NOMO.distMax, top, bot)
+    if (d < NOMO.distMin || d > NOMO.distMax) return
+    const y = distToY(d, top, bot)
     ctx.beginPath(); ctx.moveTo(xLeft - 6, y); ctx.lineTo(xLeft, y); ctx.strokeStyle = '#374151'; ctx.lineWidth = 1; ctx.stroke()
     ctx.fillText(d.toString(), xLeft - 10, y + 4)
-    // Light grid line
-    ctx.beginPath(); ctx.moveTo(xLeft, y); ctx.lineTo(xLeft + 8, y); ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 0.5; ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(xLeft, y); ctx.lineTo(xLeft + 6, y); ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 0.5; ctx.stroke()
   })
 
-  // ── Magnitude ticks (center axis, linear) ──
+  // ── Ticks de Magnitud (eje central, lineal 1.0–8.0) ──
   ctx.textAlign = 'center'
   for (let m = 1.0; m <= 8.0; m += 0.5) {
-    const y = linPos(m, NOMO.magMin, NOMO.magMax, top, bot)
+    const y = magToY(m, top, bot)
     const isInt = Number.isInteger(m)
     ctx.beginPath()
-    ctx.moveTo(xMid - (isInt ? 6 : 4), y)
-    ctx.lineTo(xMid + (isInt ? 6 : 4), y)
+    ctx.moveTo(xMid - (isInt ? 8 : 4), y)
+    ctx.lineTo(xMid + (isInt ? 8 : 4), y)
     ctx.strokeStyle = '#374151'
     ctx.lineWidth = isInt ? 1.5 : 0.8
     ctx.stroke()
-    if (isInt) {
-      ctx.font = 'bold 12px Poppins, sans-serif'
+    if (isInt || m === 1.5 || m === 2.5) {
+      ctx.font = isInt ? 'bold 12px Poppins, sans-serif' : '10px Poppins, sans-serif'
       ctx.fillStyle = '#1f2937'
-      ctx.fillText(m.toFixed(1), xMid - 20, y + 4)
+      ctx.fillText(m.toFixed(1), xMid - 22, y + 4)
     }
   }
 
-  // ── Amplitude ticks (right axis, log) ──
-  const ampTicks = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500]
+  // ── Ticks de Amplitud (eje derecho, log₁₀) ──
+  const ampTicks = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 5000, 50000]
   ctx.textAlign = 'left'
   ctx.font = '11px Poppins, sans-serif'
   ctx.fillStyle = '#374151'
   ampTicks.forEach((a) => {
-    const y = logPos(a, NOMO.ampMin, NOMO.ampMax, top, bot)
+    if (a < NOMO.ampMin || a > NOMO.ampMax) return
+    const y = ampToY(a, top, bot)
     ctx.beginPath(); ctx.moveTo(xRight, y); ctx.lineTo(xRight + 6, y); ctx.strokeStyle = '#374151'; ctx.lineWidth = 1; ctx.stroke()
     ctx.fillText(a >= 1 ? a.toString() : a.toFixed(1), xRight + 10, y + 4)
-    ctx.beginPath(); ctx.moveTo(xRight - 8, y); ctx.lineTo(xRight, y); ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 0.5; ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(xRight - 6, y); ctx.lineTo(xRight, y); ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 0.5; ctx.stroke()
   })
 
-  // ── Draw station lines ──
+  // ── Indicador de alineación: A=0.1 ↔ M=1.0 ──
+  const yBase = magToY(1.0, top, bot) // = ampToY(0.1) = bot
+  ctx.setLineDash([2, 3])
+  ctx.beginPath(); ctx.moveTo(xMid + 10, yBase); ctx.lineTo(xRight - 10, yBase)
+  ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 0.6; ctx.stroke()
+  ctx.setLineDash([])
+
+  // ── Dibujar líneas de estaciones (línea recta única de D a A) ──
   stationData.value.forEach((d) => {
     if (!stationVisibility.value[d.station]) return
-    if (!d.magnitude || d.maxAmp <= 0 || d.distance < NOMO.distMin) return
+    if (!d.magnitude || d.maxAmp <= 0 || d.distance <= 0) return
 
-    const yDist = logPos(Math.min(Math.max(d.distance, NOMO.distMin), NOMO.distMax), NOMO.distMin, NOMO.distMax, top, bot)
-    const yAmp = logPos(Math.min(Math.max(d.maxAmp, NOMO.ampMin), NOMO.ampMax), NOMO.ampMin, NOMO.ampMax, top, bot)
-    const yMag = linPos(Math.min(Math.max(d.magnitude, NOMO.magMin), NOMO.magMax), NOMO.magMin, NOMO.magMax, top, bot)
+    // Clamp to axis range
+    const cDist = Math.min(Math.max(d.distance, NOMO.distMin), NOMO.distMax)
+    const cAmp = Math.min(Math.max(d.maxAmp, NOMO.ampMin), NOMO.ampMax)
 
-    // Line from distance to amplitude passing through magnitude
+    const yDist = distToY(cDist, top, bot)
+    const yAmp = ampToY(cAmp, top, bot)
+
+    // La magnitud es DONDE la línea recta cruza el eje central
+    // yMag = yDist + α·(yAmp − yDist) por interpolación lineal
+    const yMag = yDist + NOMO.alpha * (yAmp - yDist)
+
+    // Línea recta ÚNICA de distancia a amplitud
     ctx.beginPath()
     ctx.moveTo(xLeft, yDist)
-    ctx.lineTo(xMid, yMag)
     ctx.lineTo(xRight, yAmp)
     ctx.strokeStyle = d.color
     ctx.lineWidth = 2
@@ -199,32 +350,36 @@ function renderNomogram() {
     ctx.stroke()
     ctx.globalAlpha = 1
 
-    // Dots on each axis
+    // Puntos en cada eje
     const dotR = 5
-    // distance dot
+    // Distancia
     ctx.beginPath(); ctx.arc(xLeft, yDist, dotR, 0, Math.PI * 2); ctx.fillStyle = d.color; ctx.fill()
     ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke()
-    // magnitude dot
+    // Magnitud (intersección con el eje central)
     ctx.beginPath(); ctx.arc(xMid, yMag, dotR + 1, 0, Math.PI * 2); ctx.fillStyle = d.color; ctx.fill()
     ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke()
-    // amplitude dot
+    // Amplitud
     ctx.beginPath(); ctx.arc(xRight, yAmp, dotR, 0, Math.PI * 2); ctx.fillStyle = d.color; ctx.fill()
     ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke()
 
-    // Label at distance side
+    // Etiqueta de estación
     ctx.font = 'bold 11px Poppins, sans-serif'
     ctx.fillStyle = d.color
     ctx.textAlign = 'right'
     ctx.fillText(d.station, xLeft - 10, yDist - 8)
 
-    // Amplitude value label
+    // Etiqueta de magnitud junto al punto central
+    const magVal = yToMag(yMag, top, bot)
     ctx.textAlign = 'left'
-    ctx.fillText(d.maxAmp.toFixed(1), xRight + 10, yAmp - 8)
+    ctx.fillText(magVal.toFixed(1) + ' ML', xMid + 10, yMag - 8)
+
+    // Etiqueta de amplitud
+    ctx.fillText(cAmp.toFixed(1), xRight + 10, yAmp - 8)
   })
 
-  // ── Draw selected magnitude line (horizontal on center axis) ──
+  // ── Marca de magnitud seleccionada ──
   if (selectedMagnitude.value != null) {
-    const yMag = linPos(selectedMagnitude.value, NOMO.magMin, NOMO.magMax, top, bot)
+    const yMag = magToY(selectedMagnitude.value, top, bot)
     ctx.beginPath()
     ctx.moveTo(xMid - 20, yMag)
     ctx.lineTo(xMid + 20, yMag)
@@ -232,7 +387,6 @@ function renderNomogram() {
     ctx.lineWidth = 3
     ctx.stroke()
 
-    // Red label
     ctx.font = 'bold 14px Poppins, sans-serif'
     ctx.fillStyle = '#e20000'
     ctx.textAlign = 'left'
@@ -246,19 +400,19 @@ function onCanvasClick(e) {
   const canvas = canvasRef.value
   if (!canvas) return
   const rect = canvas.getBoundingClientRect()
-  const dpr = window.devicePixelRatio || 1
   const x = e.clientX - rect.left
   const y = e.clientY - rect.top
 
   const W = rect.width
-  const H = 560
-  const top = NOMO.padTop
-  const bot = H - NOMO.padBottom
-  const xLeft = NOMO.padLeft
-  const xRight = W - NOMO.padRight
-  const xMid = (xLeft + xRight) / 2
+  const isMobile = W < 500
+  const H = isMobile ? 420 : 560
+  const top = isMobile ? 40 : NOMO.padTop
+  const bot = H - (isMobile ? 40 : NOMO.padBottom)
+  const xLeft = isMobile ? 50 : NOMO.padLeft
+  const xRight = W - (isMobile ? 50 : NOMO.padRight)
+  const xMid = xLeft + NOMO.alpha * (xRight - xLeft)
 
-  // Only respond to clicks near the magnitude axis (center ± 40px)
+  // Solo responde a clicks cerca del eje de Magnitud (centro ± 40px)
   if (Math.abs(x - xMid) > 40) return
 
   const mag = yToMag(y, top, bot)
@@ -340,10 +494,10 @@ onUnmounted(() => {
         <span class="inline-block px-3 py-1 bg-igp-blue-50 text-igp-blue text-xs font-bold uppercase tracking-wider rounded-full mb-3">
           Paso 7
         </span>
-        <h1 class="text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
           Magnitud en la Escala de Richter
         </h1>
-        <p class="text-gray-500" v-if="selectedRecord">
+        <p class="text-sm text-gray-500" v-if="selectedRecord">
           {{ selectedRecord.title }} — Nomograma de Richter
         </p>
       </div>
@@ -360,7 +514,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Info box -->
-    <div class="bg-igp-sky-blue-50 border border-igp-sky-blue-200 rounded-xl p-4 mb-6 text-sm text-igp-sky-blue-800">
+    <div class="bg-igp-sky-blue-50 border border-igp-sky-blue-200 rounded-xl p-3 sm:p-4 mb-6 text-xs sm:text-sm text-igp-sky-blue-800">
       <p class="font-semibold mb-1">¿Cómo funciona el Nomograma de Richter?</p>
       <p>
         El nomograma tiene tres ejes verticales: Distancia (izquierda), Magnitud (centro) y Amplitud (derecha).
@@ -428,7 +582,6 @@ onUnmounted(() => {
         <canvas
           ref="canvasRef"
           class="w-full cursor-crosshair"
-          style="height: 560px"
           @click="onCanvasClick"
         />
       </div>
@@ -480,7 +633,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Formula -->
-    <div class="bg-igp-blue rounded-2xl p-6 text-white mb-8">
+    <div class="bg-igp-blue rounded-2xl p-4 sm:p-6 text-white mb-8">
       <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
         <AppIcon name="info" :size="20" class="text-igp-sky-blue-300" />
         Fórmula de Richter
