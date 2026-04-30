@@ -8,7 +8,11 @@ const props = defineProps({
   record: { type: Object, default: null },
 })
 
-const emit = defineEmits(['next-step'])
+const emit = defineEmits(['next-step', 'select-record'])
+
+function selectRecord(rec) {
+  emit('select-record', rec)
+}
 
 const store = useReportStore()
 
@@ -19,6 +23,8 @@ let map = null
 let L = null
 let markerGroup = null
 let layerControl = null
+let tooltipTimer = null
+let activeMarkers = []
 
 const tabs = [
   { id: 0, label: 'Estaciones', icon: 'map-pin' },
@@ -155,6 +161,7 @@ async function initMap() {
   })
 
   // Draw ACTIVE stations
+  activeMarkers = []
   stns.forEach((st) => {
     const dot = L.circleMarker([st.lat, st.lng], {
       radius: 7,
@@ -163,10 +170,12 @@ async function initMap() {
       fillOpacity: 1,
       weight: 2,
     })
-    dot.bindPopup(
-      `<b>${st.code}</b> — ${st.name}<br>Lat: ${st.lat.toFixed(4)}, Lng: ${st.lng.toFixed(4)}`
+    dot.bindTooltip(
+      `<b>${st.code}</b> — ${st.name}<br>Lat: ${st.lat.toFixed(1)}, Lng: ${st.lng.toFixed(1)}`,
+      { permanent: false, direction: 'top', offset: [0, -6] }
     )
     markerGroup.addLayer(dot)
+    activeMarkers.push(dot)
 
     const icon = L.divIcon({
       className: '',
@@ -176,6 +185,15 @@ async function initMap() {
     })
     L.marker([st.lat, st.lng], { icon }).addTo(markerGroup)
   })
+
+  // Auto-open all active tooltips for 5 seconds
+  if (tooltipTimer) clearTimeout(tooltipTimer)
+  setTimeout(() => {
+    activeMarkers.forEach((m) => m.openTooltip())
+    tooltipTimer = setTimeout(() => {
+      activeMarkers.forEach((m) => m.closeTooltip())
+    }, 5000)
+  }, 400)
 
   if (stns.length > 0) {
     const bounds = L.latLngBounds(stns.map((s) => [s.lat, s.lng]))
@@ -206,6 +224,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  if (tooltipTimer) clearTimeout(tooltipTimer)
   if (map) {
     map.remove()
     map = null
@@ -243,12 +262,12 @@ const infoItems = computed(() => {
   if (!props.record?.info) return []
   const info = props.record.info
   return [
-    { label: 'Referencia:', value: info.referencia, icon: 'map-pin' },
+    { label: 'Referencia:', value: "Por determinar...", icon: 'map-pin' },
     { label: 'Fecha y hora origen local:', value: `${props.record.date} a las ${props.record.time} hrs`, icon: 'clock' },
-    { label: 'Latitud y Longitud (°):', value: `${info.latitud}, ${info.longitud}`, icon: 'compass' },
-    { label: 'Profundidad:', value: info.profundidad, icon: 'layers' },
-    { label: 'Intensidad máxima (MM):', value: `${info.intensidadMaxima} — ${info.areasAfectadas}`, icon: 'activity' },
-    { label: 'Magnitud:', value: info.magnitud, icon: 'zap' },
+    { label: 'Latitud y Longitud (°):', value: `Por determinar...`, icon: 'compass' },
+    { label: 'Profundidad:', value: `Por determinar...`, icon: 'layers' },
+    { label: 'Intensidad máxima (MM):', value: `Por determinar...`, icon: 'activity' },
+    { label: 'Magnitud:', value: 'Por determinar...', icon: 'zap' },
     { label: 'Región:', value: info.region, icon: 'globe' },
     { label: 'Población en zona de influencia:', value: info.poblacion, icon: 'target' },
   ]
@@ -447,24 +466,30 @@ const infoItems = computed(() => {
 
         <!-- Epicentro images carousel -->
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6 w-full max-w-lg">
-          <div
+          <button
             v-for="(rec, idx) in previewRecords.slice(0, 3)"
             :key="rec.id"
-            class="rounded-xl overflow-hidden border border-gray-200 shadow-sm animate-fadeSlideIn"
+            class="rounded-xl overflow-hidden border border-gray-200 shadow-sm animate-fadeSlideIn cursor-pointer hover:border-igp-blue hover:shadow-md transition-all duration-200 group text-left"
             :style="{ animationDelay: (idx * 100 + 200) + 'ms' }"
+            @click="selectRecord(rec)"
           >
-            <img
-              :src="getEpicentroUrl(rec.id)"
-              :alt="rec.title"
-              class="w-full h-28 object-cover"
-              loading="lazy"
-              @error="(e) => { e.target.src = getEpicentroFallback(rec.id) }"
-            />
-            <div class="px-2 py-1.5 bg-white">
-              <p class="text-[10px] font-bold text-gray-700 truncate">{{ rec.title }}</p>
-              <p class="text-[9px] text-gray-400">{{ rec.info?.magnitud }}</p>
+            <div class="relative overflow-hidden">
+              <img
+                :src="getEpicentroUrl(rec.id)"
+                :alt="rec.title"
+                class="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+                @error="(e) => { e.target.src = getEpicentroFallback(rec.id) }"
+              />
+              <div class="absolute inset-0 bg-igp-dark-blue/0 group-hover:bg-igp-dark-blue/10 transition-colors duration-200 flex items-center justify-center">
+                <AppIcon name="mouse-pointer-click" :size="20" class="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              </div>
             </div>
-          </div>
+            <div class="px-2 py-1.5 bg-white">
+              <p class="text-[10px] font-bold text-gray-700 truncate group-hover:text-igp-blue transition-colors">{{ rec.title }}</p>
+              <p class="text-[9px] text-gray-400">{{ rec.info?.region }}</p>
+            </div>
+          </button>
         </div>
 
         <!-- Features row -->

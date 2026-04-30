@@ -49,7 +49,7 @@ export const SEISMIC_RECORDS = [
   {
     id: '1_20250725_043114',
     // ─ Nombre editable que se muestra en la interfaz ─
-    title: 'Sismo de Piura',
+    title: 'Sismo A',
     subtitle: '40 km de Piura',
     date: '2025-07-25',
     time: '04:31:14',
@@ -78,7 +78,7 @@ export const SEISMIC_RECORDS = [
   },
   {
     id: '2_20210115_151343',
-    title: 'Sismo de Lambayeque',
+    title: 'Sismo B',
     subtitle: '35 km de Chiclayo',
     date: '2021-01-15',
     time: '15:13:43',
@@ -104,7 +104,7 @@ export const SEISMIC_RECORDS = [
   },
   {
     id: '3_20220716_081843',
-    title: 'Sismo de Áncash',
+    title: 'Sismo C',
     subtitle: '45 km de Huaraz',
     date: '2022-07-16',
     time: '08:18:43',
@@ -129,7 +129,7 @@ export const SEISMIC_RECORDS = [
   },
   {
     id: '4_20230223_061804',
-    title: 'Sismo de Arequipa Norte',
+    title: 'Sismo D',
     subtitle: '60 km de Arequipa',
     date: '2023-02-23',
     time: '06:18:04',
@@ -155,7 +155,7 @@ export const SEISMIC_RECORDS = [
   },
   {
     id: '5_20240912_232713',
-    title: 'Sismo de Moquegua',
+    title: 'Sismo E',
     subtitle: '50 km de Moquegua',
     date: '2024-09-12',
     time: '23:27:13',
@@ -181,7 +181,7 @@ export const SEISMIC_RECORDS = [
   },
   {
     id: '6_20210420_045329',
-    title: 'Sismo de Junín',
+    title: 'Sismo F',
     subtitle: '30 km de Huancayo',
     date: '2021-04-20',
     time: '04:53:29',
@@ -207,7 +207,7 @@ export const SEISMIC_RECORDS = [
   },
   {
     id: '7_20240510_123448',
-    title: 'Sismo de Pasco',
+    title: 'Sismo G',
     subtitle: '40 km de Cerro de Pasco',
     date: '2024-05-10',
     time: '12:34:48',
@@ -233,7 +233,7 @@ export const SEISMIC_RECORDS = [
   },
   {
     id: '8_20241221_212533',
-    title: 'Sismo de Ayacucho',
+    title: 'Sismo H',
     subtitle: '55 km de Ayacucho',
     date: '2024-12-21',
     time: '21:25:33',
@@ -258,7 +258,7 @@ export const SEISMIC_RECORDS = [
   },
   {
     id: '9_20210208_211100',
-    title: 'Sismo de Arequipa Sur',
+    title: 'Sismo I',
     subtitle: '45 km de Arequipa',
     date: '2021-02-08',
     time: '21:11:00',
@@ -284,7 +284,7 @@ export const SEISMIC_RECORDS = [
   },
   {
     id: '10_20221208_231856',
-    title: 'Sismo de Camaná',
+    title: 'Sismo J',
     subtitle: '70 km de Camaná',
     date: '2022-12-08',
     time: '23:18:56',
@@ -310,7 +310,7 @@ export const SEISMIC_RECORDS = [
   },
   {
     id: '11_20220713_091333',
-    title: 'Sismo de Tacna',
+    title: 'Sismo K',
     subtitle: '80 km de Tacna',
     date: '2022-07-13',
     time: '09:13:33',
@@ -336,7 +336,7 @@ export const SEISMIC_RECORDS = [
   },
   {
     id: '12_20220411_050644',
-    title: 'Sismo de Arica Norte',
+    title: 'Sismo L',
     subtitle: '90 km al N de Arica',
     date: '2022-04-11',
     time: '05:06:44',
@@ -362,7 +362,7 @@ export const SEISMIC_RECORDS = [
   },
   {
     id: '13_20230717_095841',
-    title: 'Sismo de Huánuco',
+    title: 'Sismo M',
     subtitle: '35 km de Huánuco',
     date: '2023-07-17',
     time: '09:58:41',

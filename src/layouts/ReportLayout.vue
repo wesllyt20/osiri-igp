@@ -180,7 +180,7 @@ function handleNextStep() {
                   class="text-[10px] truncate"
                   :class="selectedQuake?.id === record.id ? 'text-white/70' : 'text-gray-400'"
                 >
-                  {{ record.subtitle }}
+                  {{ record.info.region }}
                 </p>
                 <div class="flex items-center gap-1.5 mt-0.5">
                   <span
@@ -189,7 +189,7 @@ function handleNextStep() {
                   >
                     {{ formatDateShort(record.date) }}
                   </span>
-                  <span
+                  <!-- <span
                     v-if="record.info?.magnitud"
                     class="text-[9px] font-bold px-1 py-0.5 rounded"
                     :class="
@@ -199,7 +199,7 @@ function handleNextStep() {
                     "
                   >
                     {{ record.info.magnitud }}
-                  </span>
+                  </span> -->
                 </div>
               </div>
             </div>
@@ -326,6 +326,7 @@ function handleNextStep() {
           v-if="currentStep === 1"
           :record="selectedQuake"
           @next-step="handleNextStep"
+          @select-record="selectQuake"
           class="flex-1"
           :class="{ 'hidden lg:flex': !selectedQuake }"
         />
