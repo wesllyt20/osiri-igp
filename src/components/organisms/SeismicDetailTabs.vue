@@ -264,10 +264,10 @@ const infoItems = computed(() => {
   return [
     { label: 'Referencia:', value: "Por determinar...", icon: 'map-pin' },
     { label: 'Fecha y hora origen local:', value: `${props.record.date} a las ${props.record.time} hrs`, icon: 'clock' },
-    { label: 'Latitud y Longitud (°):', value: `Por determinar...`, icon: 'compass' },
-    { label: 'Profundidad:', value: `Por determinar...`, icon: 'layers' },
-    { label: 'Intensidad máxima (MM):', value: `Por determinar...`, icon: 'activity' },
     { label: 'Magnitud:', value: 'Por determinar...', icon: 'zap' },
+    { label: 'Profundidad:', value: info.profundidad, icon: 'layers' },
+    { label: 'Latitud y Longitud (°):', value: `Por determinar...`, icon: 'compass' },
+    { label: 'Intensidad máxima (MM):', value: info.intensidadMaxima, icon: 'activity' },
     { label: 'Región:', value: info.region, icon: 'globe' },
     { label: 'Población en zona de influencia:', value: info.poblacion, icon: 'target' },
   ]
@@ -280,24 +280,17 @@ const infoItems = computed(() => {
     <!-- Tab header + Next step button -->
     <div class="flex items-end border-b border-gray-200 bg-white px-1 sm:px-2 pt-2 shrink-0">
       <div class="flex gap-0.5 sm:gap-1 flex-1 min-w-0">
-        <button
-          v-for="tab in tabs"
-          :key="tab.id"
+        <button v-for="tab in tabs" :key="tab.id"
           class="relative flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 text-[11px] sm:text-sm font-semibold rounded-t-xl transition-all duration-200 cursor-pointer whitespace-nowrap"
-          :class="
-            activeTab === tab.id
+          :class="activeTab === tab.id
               ? 'bg-igp-blue text-white shadow-md -mb-px z-10'
               : 'text-gray-500 hover:text-igp-dark-blue hover:bg-gray-50'
-          "
-          @click="selectTab(tab.id)"
-        >
+            " @click="selectTab(tab.id)">
           <AppIcon :name="tab.icon" :size="14" class="sm:hidden" />
           <AppIcon :name="tab.icon" :size="16" class="hidden sm:block" />
           <span class="hidden sm:inline">{{ tab.label }}</span>
-          <span
-            v-if="isUnviewed(tab.id)"
-            class="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-4 h-4 sm:w-5 sm:h-5 bg-igp-orange-500 text-white text-[8px] sm:text-[10px] font-black rounded-full flex items-center justify-center shadow-lg animate-bounce-gentle"
-          >
+          <span v-if="isUnviewed(tab.id)"
+            class="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-4 h-4 sm:w-5 sm:h-5 bg-igp-orange-500 text-white text-[8px] sm:text-[10px] font-black rounded-full flex items-center justify-center shadow-lg animate-bounce-gentle">
             !
           </span>
         </button>
@@ -306,14 +299,10 @@ const infoItems = computed(() => {
       <div class="pb-1 sm:pb-1.5 pr-0.5 sm:pr-1 shrink-0">
         <button
           class="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-sm font-bold transition-all duration-300"
-          :class="
-            allTabsViewed
+          :class="allTabsViewed
               ? 'bg-igp-green-700 text-white hover:bg-igp-green-800 shadow-md cursor-pointer'
               : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-          "
-          :disabled="!allTabsViewed"
-          @click="handleNextStep"
-        >
+            " :disabled="!allTabsViewed" @click="handleNextStep">
           <span class="hidden sm:inline">Siguiente paso</span>
           <span class="sm:hidden">Siguiente</span>
           <AppIcon name="arrow-right" :size="14" class="sm:hidden" />
@@ -337,43 +326,32 @@ const infoItems = computed(() => {
             que registraron el evento <span class="font-semibold">{{ record.title }}</span>
             ({{ record.stations.length }} estaciones activas).
             Las estaciones en <span class="text-gray-400">gris</span> son las demás estaciones de la red.
-            Use el selector de capas <span class="font-medium">(esquina superior derecha)</span> para cambiar el mapa base.
+            Use el selector de capas <span class="font-medium">(esquina superior derecha)</span> para cambiar el mapa
+            base.
           </p>
         </div>
       </div>
 
       <!-- ── Tab 1: Ondas Sísmicas — 2x2 grid ── -->
       <div v-show="activeTab === 1" class="h-full flex flex-col p-4">
-        <div
-          class="flex-1 grid gap-3"
-          :class="[
-            waveformImages.length <= 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2',
-            waveformImages.length === 1 ? 'grid-cols-1' : ''
-          ]"
-          :style="waveformImages.length <= 2 ? '' : 'grid-template-rows: auto'"
-        >
-          <div
-            v-for="(img, idx) in waveformImages"
-            :key="img.station"
+        <div class="flex-1 grid gap-3" :class="[
+          waveformImages.length <= 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2',
+          waveformImages.length === 1 ? 'grid-cols-1' : ''
+        ]" :style="waveformImages.length <= 2 ? '' : 'grid-template-rows: auto'">
+          <div v-for="(img, idx) in waveformImages" :key="img.station"
             class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col animate-fadeSlideIn"
-            :style="{ animationDelay: (idx * 80) + 'ms' }"
-            :class="[
+            :style="{ animationDelay: (idx * 80) + 'ms' }" :class="[
               waveformImages.length === 3 && idx === 2 ? 'sm:col-span-2 sm:max-w-[50%] sm:mx-auto w-full' : ''
-            ]"
-          >
+            ]">
             <div class="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2 shrink-0">
               <AppIcon name="activity" :size="12" class="text-igp-dark-blue" />
               <span class="text-xs font-bold text-igp-dark-blue">{{ img.station }}</span>
               <span class="text-[10px] text-gray-400">{{ img.name }}</span>
             </div>
             <div class="flex-1 p-1.5 flex items-center justify-center">
-              <img
-                :src="img.asciiUrl"
-                :alt="'Onda sísmica ' + img.station"
-                class="max-w-full max-h-full object-contain rounded-lg"
-                loading="lazy"
-                @error="(e) => { e.target.src = img.sacUrl }"
-              />
+              <img :src="img.asciiUrl" :alt="'Onda sísmica ' + img.station"
+                class="max-w-full max-h-full object-contain rounded-lg" loading="lazy"
+                @error="(e) => { e.target.src = img.sacUrl }" />
             </div>
           </div>
         </div>
@@ -398,13 +376,11 @@ const infoItems = computed(() => {
         </div>
 
         <!-- Info grid — 2 columns -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-0 bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-          <div
-            v-for="(item, idx) in infoItems"
-            :key="item.label"
+        <div
+          class="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-0 bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+          <div v-for="(item, idx) in infoItems" :key="item.label"
             class="flex items-start gap-3 px-4 py-3.5 border-b border-gray-100 animate-fadeSlideIn"
-            :style="{ animationDelay: (idx * 50) + 'ms' }"
-          >
+            :style="{ animationDelay: (idx * 50) + 'ms' }">
             <div class="w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center shrink-0 mt-0.5">
               <AppIcon :name="item.icon" :size="14" class="text-gray-400" />
             </div>
@@ -417,7 +393,9 @@ const infoItems = computed(() => {
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3">
           <!-- Observaciones -->
-          <div v-if="record.info?.observaciones" class="bg-igp-sky-blue-50 rounded-xl p-4 border border-igp-sky-blue-100 animate-fadeSlideIn" style="animation-delay: 400ms">
+          <div v-if="record.info?.observaciones"
+            class="bg-igp-sky-blue-50 rounded-xl p-4 border border-igp-sky-blue-100 animate-fadeSlideIn"
+            style="animation-delay: 400ms">
             <h4 class="text-sm font-bold text-igp-dark-blue mb-1 flex items-center gap-2">
               <AppIcon name="file-text" :size="14" />
               Observaciones
@@ -426,17 +404,15 @@ const infoItems = computed(() => {
           </div>
 
           <!-- Stations used -->
-          <div class="bg-white rounded-xl border border-gray-200 p-4 animate-fadeSlideIn" style="animation-delay: 500ms">
+          <div class="bg-white rounded-xl border border-gray-200 p-4 animate-fadeSlideIn"
+            style="animation-delay: 500ms">
             <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
               <AppIcon name="target" :size="14" class="text-gray-400" />
               Estaciones que Registraron el Evento
             </h4>
             <div class="flex flex-wrap gap-1.5">
-              <span
-                v-for="st in record.stations"
-                :key="st"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg"
-              >
+              <span v-for="st in record.stations" :key="st"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg">
                 <span class="w-1.5 h-1.5 bg-gray-700 rounded-full"></span>
                 {{ st }} — {{ STATIONS_CATALOG[st]?.name || st }}
               </span>
@@ -453,12 +429,15 @@ const infoItems = computed(() => {
       <div class="flex flex-col items-center">
         <!-- Header -->
         <div class="mb-6 text-center">
-          <div class="inline-flex items-center gap-2 px-3 py-1 bg-igp-dark-blue/10 text-igp-dark-blue text-xs font-bold uppercase tracking-wider rounded-full mb-3 animate-fadeSlideIn">
+          <div
+            class="inline-flex items-center gap-2 px-3 py-1 bg-igp-dark-blue/10 text-igp-dark-blue text-xs font-bold uppercase tracking-wider rounded-full mb-3 animate-fadeSlideIn">
             <AppIcon name="activity" :size="14" />
             <span>Sistema de Reportes</span>
           </div>
-          <h2 class="text-2xl font-extrabold text-gray-800 animate-fadeSlideIn" style="animation-delay: 100ms">Reportes Sísmicos del IGP</h2>
-          <p class="text-sm text-gray-500 mt-2 leading-relaxed max-w-md mx-auto animate-fadeSlideIn" style="animation-delay: 150ms">
+          <h2 class="text-2xl font-extrabold text-gray-800 animate-fadeSlideIn" style="animation-delay: 100ms">Reportes
+            Sísmicos del IGP</h2>
+          <p class="text-sm text-gray-500 mt-2 leading-relaxed max-w-md mx-auto animate-fadeSlideIn"
+            style="animation-delay: 150ms">
             Visualiza la información completa de cada evento sísmico: estaciones de monitoreo,
             formas de onda y datos técnicos detallados.
           </p>
@@ -466,34 +445,30 @@ const infoItems = computed(() => {
 
         <!-- Epicentro images carousel -->
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6 w-full max-w-lg">
-          <button
-            v-for="(rec, idx) in previewRecords.slice(0, 3)"
-            :key="rec.id"
+          <button v-for="(rec, idx) in previewRecords.slice(0, 3)" :key="rec.id"
             class="rounded-xl overflow-hidden border border-gray-200 shadow-sm animate-fadeSlideIn cursor-pointer hover:border-igp-blue hover:shadow-md transition-all duration-200 group text-left"
-            :style="{ animationDelay: (idx * 100 + 200) + 'ms' }"
-            @click="selectRecord(rec)"
-          >
+            :style="{ animationDelay: (idx * 100 + 200) + 'ms' }" @click="selectRecord(rec)">
             <div class="relative overflow-hidden">
-              <img
-                :src="getEpicentroUrl(rec.id)"
-                :alt="rec.title"
-                class="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-300"
-                loading="lazy"
-                @error="(e) => { e.target.src = getEpicentroFallback(rec.id) }"
-              />
-              <div class="absolute inset-0 bg-igp-dark-blue/0 group-hover:bg-igp-dark-blue/10 transition-colors duration-200 flex items-center justify-center">
-                <AppIcon name="mouse-pointer-click" :size="20" class="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              <img :src="getEpicentroUrl(rec.id)" :alt="rec.title"
+                class="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy"
+                @error="(e) => { e.target.src = getEpicentroFallback(rec.id) }" />
+              <div
+                class="absolute inset-0 bg-igp-dark-blue/0 group-hover:bg-igp-dark-blue/10 transition-colors duration-200 flex items-center justify-center">
+                <AppIcon name="mouse-pointer-click" :size="20"
+                  class="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
               </div>
             </div>
             <div class="px-2 py-1.5 bg-white">
-              <p class="text-[10px] font-bold text-gray-700 truncate group-hover:text-igp-blue transition-colors">{{ rec.title }}</p>
+              <p class="text-[10px] font-bold text-gray-700 truncate group-hover:text-igp-blue transition-colors">{{
+                rec.title }}</p>
               <p class="text-[9px] text-gray-400">{{ rec.info?.region }}</p>
             </div>
           </button>
         </div>
 
         <!-- Features row -->
-        <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-6 w-full max-w-lg animate-fadeSlideIn" style="animation-delay: 500ms">
+        <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-6 w-full max-w-lg animate-fadeSlideIn"
+          style="animation-delay: 500ms">
           <div class="text-center p-3 bg-white rounded-xl border border-gray-100">
             <AppIcon name="map-pin" :size="20" class="text-igp-dark-blue mx-auto mb-1" />
             <p class="text-[10px] font-semibold text-gray-600">Estaciones</p>
@@ -509,8 +484,10 @@ const infoItems = computed(() => {
         </div>
 
         <!-- CTA arrow (desktop only, mobile has inline list) -->
-        <div class="hidden lg:flex items-center gap-3 bg-igp-dark-blue/5 px-5 py-3 rounded-xl animate-fadeSlideIn" style="animation-delay: 600ms">
-          <svg class="w-7 h-7 text-igp-dark-blue animate-bounce-left shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <div class="hidden lg:flex items-center gap-3 bg-igp-dark-blue/5 px-5 py-3 rounded-xl animate-fadeSlideIn"
+          style="animation-delay: 600ms">
+          <svg class="w-7 h-7 text-igp-dark-blue animate-bounce-left shrink-0" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12" />
             <polyline points="12 19 5 12 12 5" />
           </svg>
@@ -530,25 +507,45 @@ const infoItems = computed(() => {
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
 .animate-fadeSlideIn {
   animation: fadeSlideIn 0.4s ease-out both;
 }
+
 @keyframes bounceLeft {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(-8px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(-8px);
+  }
 }
+
 .animate-bounce-left {
   animation: bounceLeft 1.2s ease-in-out infinite;
 }
+
 @keyframes bounceGentle {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
 }
+
 .animate-bounce-gentle {
   animation: bounceGentle 1.5s ease-in-out infinite;
 }

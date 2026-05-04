@@ -39,7 +39,7 @@ const stationData = computed(() => {
       const distance = (deltaSP * VP * VS) / (VP - VS)
       const maxAmp = a.maxAmp || 0
       const ml = maxAmp > 0 && distance > 0
-        ? Math.log10(maxAmp) + 2.76 * Math.log10(distance) - 2.48
+        ? Math.log10(maxAmp) + Math.log10(distance)
         : null
       return { station: s, distance, maxAmp, magnitude: ml, color: STATION_COLORS[idx % STATION_COLORS.length] }
     })
@@ -52,150 +52,101 @@ const avgMagnitude = computed(() => {
   return mags.reduce((a, b) => a + b, 0) / mags.length
 })
 
-// ── Nomogram de Richter ──
-// Geometría de triple eje: tres ejes verticales paralelos alineados a la misma altura.
-// Magnitud (1.0–8.0) es el eje REFERENCIA (centro, lineal).
-// Amplitud (0.1–500 mm, logarítmico) comienza exactamente a la altura de M=1.0.
-// Distancia (derivada matemáticamente, logarítmico) se alinea por la fórmula de Richter.
-//
+// ── Nomograma de Richter (Clásico) ──
 // Fórmula: ML = log₁₀(A) + 2.76 × log₁₀(D) − 2.48
 //
-// Normalización a [0,1]:
-//   yMagnitud = (M − 1) / 7
-//   yAmplitud = (log₁₀(A) − log₁₀(0.1)) / (log₁₀(500) − log₁₀(0.1))
-//   yDistancia = (log₁₀(D) − log₁₀(D_min)) / (log₁₀(D_max) − log₁₀(D_min))
+// Geometría: los 3 ejes comparten UN MISMO factor de escala k (px por unidad lógica).
+// Se define un punto de referencia (refY) y cada valor se posiciona relativo a él:
+//   yAmp = refY − k × log₁₀(A)
+//   yDist = refY − k × 2.76 × log₁₀(D)
+//   yMag = refY − k × (M + 2.48)
 //
-// Nomograma de Richter: ML = log₁₀(A) + 2.76 × log₁₀(D) − 2.48
-// α = 2.76 / (1 + 2.76) ≈ 0.7340  (proporción del coeficiente de distancia)
+// Alineaciones de la imagen de referencia:
+//   Fondo: D=20, A=0.1, M≈1.0 están al mismo nivel
+//   D=100 alineado con A=1.0 (verificación: 2.76×log₁₀(100) = 5.52, log₁₀(1) = 0... no)
 //
-// Los tres ejes comparten un mismo factor de escala vertical k (px por unidad log).
-// - Eje derecho (Amplitud): yA = refY − k · log₁₀(A)
-// - Eje izquierdo (Distancia): yD = refY − k · 2.76 · log₁₀(D)
-// - Eje central (Magnitud): yM = refY − k · (M + 2.48)
+// En realidad la alineación correcta es por la LÍNEA RECTA del nomograma:
+// una recta de D en el eje izq a A en el eje der cruza el eje central en M.
+// Los ejes NO necesitan estar alineados horizontalmente en los mismos valores.
 //
-// Verificación de anclaje: D=100, A=1 → ML = 0 + 2.76·2 − 2.48 = 3.04 ✓
+// El truco geométrico: α = coefDist×logDistRange / (coefDist×logDistRange + logAmpRange)
+// define la posición del eje central DESDE LA IZQUIERDA.
+// Así, la interpolación lineal y = yDist + α×(yAmp − yDist) da yMag correctamente.
+//
+// Para que la imagen se vea como la referencia, los ejes deben tener alturas
+// proporcionales a sus rangos lógicos escalados:
+//   Altura lógica Distancia: coefDist × logDistRange = 2.76 × 1.602 = 4.42
+//   Altura lógica Amplitud: logAmpRange = 3.699
+//   Altura lógica Magnitud (eje central): Mrange = 4.42 + 3.699 = 8.12
+//
+// Todos los ejes ocupan la MISMA altura en px, pero cubren diferentes rangos lógicos.
+// La normalización a [0,1] para cada eje es independiente.
 
 const NOMO = (() => {
-  // Fórmula: ML = log₁₀(A) + 2.76·log₁₀(D) − 2.48
   const coefDist = 2.76
   const calibConst = -2.48
 
-  // α = coefDist / (1 + coefDist) ≈ 0.7340
-  const alpha = coefDist / (1 + coefDist)
-
-  // Magnitud: rango visible en el eje central
-  const magMin = 1.0, magMax = 8.0
-  const magRange = magMax - magMin // 7.0
-
-  // Amplitud: rango logarítmico (mm)
+  // Rangos de ejes según imagen de referencia
+  const distMin = 20, distMax = 800
   const ampMin = 0.1, ampMax = 500
-  const logAmpMin = Math.log10(ampMin) // −1
-  const logAmpMax = Math.log10(ampMax) // ~2.699
-  const logAmpRange = logAmpMax - logAmpMin // ~3.699
 
-  // Factor de escala unificado: k unidades lógicas = magRange + 2.48 abarca el eje central
-  // El eje de magnitud cubre (magMin+calibConst) a (magMax+calibConst) en unidades internas
-  // = (1−2.48)=−1.48 a (8−2.48)=5.52, rango interno = 7.0
-  // Usamos magRange como la altura lógica total del eje de magnitud.
-  // El eje de amplitud cubre logAmpRange unidades log → su altura en px = k·logAmpRange
-  // El eje de distancia cubre logAmpRange·coefDist/(1) ... derivamos de la geometría.
+  const logDistMin = Math.log10(distMin) // 1.301
+  const logDistMax = Math.log10(distMax) // 2.903
+  const logDistRange = logDistMax - logDistMin // 1.602
 
-  // Altura lógica total (en unidades de "magnitud interna"): magRange
-  // Amplitud lógica: logAmpRange, mapeada al mismo espacio → k = magRange / logAmpRange? No.
-  // Correcto: los tres ejes tienen LA MISMA altura en píxeles.
-  // Para que la geometría funcione con α, necesitamos:
-  //   escala_amp = 1 unidad log amp por unidad de altura normalizada
-  //   escala_dist = coefDist unidades log dist equivalen a 1 unidad de altura normalizada (comprimida)
-  //   escala_mag = (M + calibConst) mapeada linealmente
-  //
-  // Normalizamos todo al rango [0,1] usando la escala del eje de magnitud como referencia.
-  // Sea S = magRange (= 7.0) la altura lógica.
-  // Amp: logAmpRange unidades log → normalizamos a [0, logAmpRange/S]... pero todos deben ir de 0 a 1.
-  //
-  // Enfoque directo: todos los ejes van de bot a top (misma altura en px).
-  // Definimos para cada eje su propio rango y normalizamos a [0,1] independientemente,
-  // PERO los rangos deben satisfacer: logAmpRange = S y coefDist·logDistRange = S
-  // para que la interpolación lineal con α funcione.
+  const logAmpMin = Math.log10(ampMin) // -1
+  const logAmpMax = Math.log10(ampMax) // 2.699
+  const logAmpRange = logAmpMax - logAmpMin // 3.699
 
-  // Rango log de amplitud fijo → S = logAmpRange ≈ 3.699
-  // Rango log de distancia: logDistRange = S / coefDist ≈ 1.340
-  // Rango de magnitud: magRange_eff = S (en unidades de M+calibConst)
-  //   → M va de M_bot a M_bot + S, donde M_bot se elige para cubrir el rango deseado.
+  // Alturas lógicas escaladas
+  const hDist = coefDist * logDistRange // 4.42
+  const hAmp = logAmpRange // 3.699
+  const hMag = hDist + hAmp // 8.12 = Mrange total del eje central
 
-  // Elegimos M_bot y M_top para cubrir magMin..magMax:
-  // M_bot + calibConst corresponde al fondo del eje → M_bot = magMin
-  // M_top = magMin + logAmpRange → ≈ 1.0 + 3.699 = 4.699... eso no cubre hasta 8.
-  // Problema: logAmpRange < magRange, así que el eje de amplitud es "más corto" que el de magnitud.
-  // Solución: ampliamos el rango de amplitud y distancia para cubrir magRange.
+  // α: posición del eje central (desde la izquierda) para que la regla funcione
+  const alpha = hDist / hMag // ≈ 0.544
 
-  // Para que los tres ejes tengan la misma altura y cubran magMin a magMax:
-  // S = magRange = 7.0
-  // logAmpRange_needed = S = 7.0 → ampMin a ampMax cubre 7 órdenes de magnitud? No, eso es mucho.
-  //
-  // En realidad, en el nomograma clásico los ejes NO tienen el mismo rango lógico.
-  // La clave es que todos comparten el mismo factor k (px por unidad log).
-  // Los ejes pueden tener diferentes longitudes en píxeles, O usamos el mismo alto
-  // y ajustamos los rangos.
-  //
-  // Approach final: todos los ejes misma altura (top a bot).
-  // k = (bot - top) / S, donde S es el rango lógico maestro.
-  // Elegimos S = magRange = 7.0 (cubre M=1 a M=8).
-  // Entonces:
-  //   Amplitud: cubre S unidades log → logAmpMin_eff a logAmpMin_eff + S
-  //   Distancia: cubre S/coefDist unidades log → logDistMin_eff a logDistMin_eff + S/coefDist
+  // Magnitud efectiva mínima y máxima (determinada por la geometría)
+  // Cuando D=Dmin (fondo izq) y A=Amin (fondo der):
+  // ML = log₁₀(Amin) + coefDist×log₁₀(Dmin) + calibConst
+  const magMin_eff = logAmpMin + coefDist * logDistMin + calibConst // ≈ 0.11
+  const magMax_eff = magMin_eff + hMag // ≈ 8.23
 
-  const S = magRange // 7.0 = rango maestro
-
-  // Amplitud efectiva: necesitamos 7 unidades log → 10^(-1) a 10^(6) = 0.1 a 1,000,000 mm
-  // Eso es demasiado amplio. En la práctica, solo dibujamos ticks donde hay datos.
-  // Mantenemos ampMin=0.1 y ampMax_eff = 10^(logAmpMin + S) = 10^6. Los ticks visibles serán pocos.
-  const logAmpMin_eff = logAmpMin // −1
-  const logAmpMax_eff = logAmpMin_eff + S // 6.0
-  const ampMax_eff = Math.pow(10, logAmpMax_eff)
-
-  // Distancia efectiva: S/coefDist ≈ 2.536 unidades log
-  const logDistRange_eff = S / coefDist
-  // Anclaje: cuando A=ampMin (fondo amp) y M=magMin (fondo mag):
-  // magMin = logAmpMin + coefDist·log₁₀(D_bot) + calibConst
-  // → log₁₀(D_bot) = (magMin - calibConst - logAmpMin) / coefDist
-  const logDistMin_eff = (magMin - calibConst - logAmpMin_eff) / coefDist
-  // = (1 + 2.48 + 1) / 2.76 = 4.48/2.76 ≈ 1.6232
-  const logDistMax_eff = logDistMin_eff + logDistRange_eff
-  const distMin = Math.pow(10, logDistMin_eff)
-  const distMax = Math.pow(10, logDistMax_eff)
+  // Rango visible de ticks de magnitud
+  const magMin = 1.0, magMax = 8.0
 
   return {
-    magMin, magMax, magRange, S,
+    magMin, magMax,
+    magMin_eff, magMax_eff, hMag, hDist, hAmp,
     coefDist, calibConst,
-    ampMin, ampMax: ampMax_eff, logAmpMin: logAmpMin_eff, logAmpMax: logAmpMax_eff, logAmpRange: S,
-    distMin, distMax, logDistMin: logDistMin_eff, logDistMax: logDistMax_eff, logDistRange: logDistRange_eff,
+    ampMin, ampMax, logAmpMin, logAmpMax, logAmpRange,
+    distMin, distMax, logDistMin, logDistMax, logDistRange,
     alpha,
     padTop: 50, padBottom: 60, padLeft: 80, padRight: 80,
   }
 })()
 
 // ── Funciones de mapeo valor → pixel Y ──
-// Todos los ejes comparten la misma altura (top ↔ bot) y el rango maestro S.
-// Normalización a [0,1]: 0 = fondo (bot), 1 = tope (top).
+// Los 3 ejes comparten la misma altura en px pero cubren diferentes rangos lógicos.
+// Cada eje se normaliza a [0,1] independientemente: 0 = fondo (bot), 1 = tope (top).
 function normToY(t, top, bot) { return bot - t * (bot - top) }
 
-// Magnitud: lineal, M ∈ [magMin, magMax] → [0, 1]
-function normMag(M) { return (M - NOMO.magMin) / NOMO.S }
+// Magnitud: lineal, M ∈ [magMin_eff, magMax_eff] → [0, 1]
+function normMag(M) { return (M - NOMO.magMin_eff) / NOMO.hMag }
 function magToY(M, top, bot) { return normToY(normMag(M), top, bot) }
 
-// Amplitud: log₁₀, cubre S unidades log (misma escala que magnitud)
-function normAmp(A) { return (Math.log10(A) - NOMO.logAmpMin) / NOMO.S }
+// Amplitud: log₁₀(A) normalizado sobre logAmpRange → [0, 1]
+function normAmp(A) { return (Math.log10(A) - NOMO.logAmpMin) / NOMO.logAmpRange }
 function ampToY(A, top, bot) { return normToY(normAmp(A), top, bot) }
 
-// Distancia: log₁₀ × coefDist, cubre S/coefDist unidades log → escalado a [0,1]
+// Distancia: log₁₀(D) normalizado sobre logDistRange → [0, 1]
 function normDist(D) { return (Math.log10(D) - NOMO.logDistMin) / NOMO.logDistRange }
 function distToY(D, top, bot) { return normToY(normDist(D), top, bot) }
 
 // Pixel Y → Magnitud (inversa para clicks en el eje central)
-// Incluye la calibración: la posición en el eje central corresponde a M directamente.
 function yToMag(y, top, bot) {
   const t = (bot - y) / (bot - top)
-  return NOMO.magMin + t * NOMO.S
+  return NOMO.magMin_eff + t * NOMO.hMag
 }
 
 function renderNomogram() {
@@ -274,7 +225,7 @@ function renderNomogram() {
   ctx.fillStyle = '#00214f'
 
   // ── Ticks de Distancia (eje izquierdo, log₁₀) ──
-  const distTicks = [50, 60, 80, 100, 150, 200, 300, 400, 500, 600, 800, 1000, 2000, 5000, 10000]
+  const distTicks = [20, 30, 40, 50, 60, 80, 100, 150, 200, 300, 400, 500, 600, 700, 800]
   ctx.font = '11px Poppins, sans-serif'
   ctx.fillStyle = '#374151'
   ctx.textAlign = 'right'
@@ -305,7 +256,7 @@ function renderNomogram() {
   }
 
   // ── Ticks de Amplitud (eje derecho, log₁₀) ──
-  const ampTicks = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 5000, 50000]
+  const ampTicks = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500]
   ctx.textAlign = 'left'
   ctx.font = '11px Poppins, sans-serif'
   ctx.fillStyle = '#374151'
@@ -316,13 +267,6 @@ function renderNomogram() {
     ctx.fillText(a >= 1 ? a.toString() : a.toFixed(1), xRight + 10, y + 4)
     ctx.beginPath(); ctx.moveTo(xRight - 6, y); ctx.lineTo(xRight, y); ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 0.5; ctx.stroke()
   })
-
-  // ── Indicador de alineación: A=0.1 ↔ M=1.0 ──
-  const yBase = magToY(1.0, top, bot) // = ampToY(0.1) = bot
-  ctx.setLineDash([2, 3])
-  ctx.beginPath(); ctx.moveTo(xMid + 10, yBase); ctx.lineTo(xRight - 10, yBase)
-  ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 0.6; ctx.stroke()
-  ctx.setLineDash([])
 
   // ── Dibujar líneas de estaciones (línea recta única de D a A) ──
   stationData.value.forEach((d) => {
@@ -573,7 +517,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Chart -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+    <div class="w-full max-w-250 mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
       <div class="p-4 border-b border-gray-100 flex items-center gap-2">
         <AppIcon name="zap" :size="20" class="text-red-500" />
         <h2 class="text-lg font-bold text-igp-blue">Nomograma de Richter</h2>
@@ -640,7 +584,7 @@ onUnmounted(() => {
       </h3>
       <div class="bg-white/10 rounded-xl p-4 text-center">
         <p class="text-lg font-mono font-semibold">
-          ML = log₁₀(A) + 2.76 × log₁₀(D) - 2.48
+          ML = log₁₀(A) + log₁₀(D)
         </p>
         <p class="text-sm text-gray-300 mt-2">
           A = Amplitud máxima (mm) | D = Distancia epicentral (km)

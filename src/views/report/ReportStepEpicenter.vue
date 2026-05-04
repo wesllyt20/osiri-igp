@@ -460,7 +460,7 @@ onUnmounted(() => {
         </div>
         <div class="bg-white/10 rounded-xl p-3">
           <p class="text-xs text-gray-300 mb-1">Profundidad</p>
-          <p class="text-lg font-bold text-gray-400 italic">Siguiente paso</p>
+          <p class="text-lg font-bold">{{ selectedRecord?.info?.profundidad || '---' }}</p>
         </div>
         <div class="bg-white/10 rounded-xl p-3">
           <p class="text-xs text-gray-300 mb-1">Latitud</p>

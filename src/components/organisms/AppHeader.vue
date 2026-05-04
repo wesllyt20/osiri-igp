@@ -14,7 +14,7 @@ const navLinks = [
 ]
 
 // Only the Home route gets the transparent→white scroll effect
-const isHome = computed(() => route.path === '/')
+const isHome = computed(() => route.path === '/' || route.path === '/home')
 
 // When NOT home, header is always light (white bg, colored logos)
 const showLight = computed(() => !isHome.value || scrolled.value)
