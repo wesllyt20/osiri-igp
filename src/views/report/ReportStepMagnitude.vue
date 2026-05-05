@@ -38,10 +38,11 @@ const stationData = computed(() => {
       const deltaSP = a.tS - a.tP
       const distance = (deltaSP * VP * VS) / (VP - VS)
       const maxAmp = a.maxAmp || 0
-      const ml = maxAmp > 0 && distance > 0
-        ? Math.log10(maxAmp) + Math.log10(distance)
+      // Fórmula correcta: ML = log₁₀(A) + 3×log₁₀(8×Δt_SP) − 2.92
+      const ml = maxAmp > 0 && deltaSP > 0
+        ? Math.log10(maxAmp) + 3 * Math.log10(8 * deltaSP) - 2.92
         : null
-      return { station: s, distance, maxAmp, magnitude: ml, color: STATION_COLORS[idx % STATION_COLORS.length] }
+      return { station: s, deltaSP, distance, maxAmp, magnitude: ml, color: STATION_COLORS[idx % STATION_COLORS.length] }
     })
     .filter(Boolean)
 })
@@ -53,74 +54,50 @@ const avgMagnitude = computed(() => {
 })
 
 // ── Nomograma de Richter (Clásico) ──
-// Fórmula: ML = log₁₀(A) + 2.76 × log₁₀(D) − 2.48
+// Fórmula: ML = log₁₀(A) + 3×log₁₀(8×Δt_SP) − 2.92
+//        = log₁₀(A) + 3×log₁₀(Δt_SP) + 3×log₁₀(8) − 2.92
+//        = log₁₀(A) + 3×log₁₀(Δt_SP) − 0.211
 //
-// Geometría: los 3 ejes comparten UN MISMO factor de escala k (px por unidad lógica).
-// Se define un punto de referencia (refY) y cada valor se posiciona relativo a él:
-//   yAmp = refY − k × log₁₀(A)
-//   yDist = refY − k × 2.76 × log₁₀(D)
-//   yMag = refY − k × (M + 2.48)
+// Tres ejes paralelos (misma altura en px):
+//   Izquierdo: S-P (seg) — escala logarítmica
+//   Centro: Magnitud Richter — escala lineal
+//   Derecho: Amplitud (mm) — escala logarítmica
 //
-// Alineaciones de la imagen de referencia:
-//   Fondo: D=20, A=0.1, M≈1.0 están al mismo nivel
-//   D=100 alineado con A=1.0 (verificación: 2.76×log₁₀(100) = 5.52, log₁₀(1) = 0... no)
-//
-// En realidad la alineación correcta es por la LÍNEA RECTA del nomograma:
-// una recta de D en el eje izq a A en el eje der cruza el eje central en M.
-// Los ejes NO necesitan estar alineados horizontalmente en los mismos valores.
-//
-// El truco geométrico: α = coefDist×logDistRange / (coefDist×logDistRange + logAmpRange)
-// define la posición del eje central DESDE LA IZQUIERDA.
-// Así, la interpolación lineal y = yDist + α×(yAmp − yDist) da yMag correctamente.
-//
-// Para que la imagen se vea como la referencia, los ejes deben tener alturas
-// proporcionales a sus rangos lógicos escalados:
-//   Altura lógica Distancia: coefDist × logDistRange = 2.76 × 1.602 = 4.42
-//   Altura lógica Amplitud: logAmpRange = 3.699
-//   Altura lógica Magnitud (eje central): Mrange = 4.42 + 3.699 = 8.12
-//
-// Todos los ejes ocupan la MISMA altura en px, pero cubren diferentes rangos lógicos.
-// La normalización a [0,1] para cada eje es independiente.
+// Una recta desde S-P (izq) a Amplitud (der) cruza el eje central en la Magnitud.
+// α = posición del eje central desde la izquierda = logA_range / M_range
 
 const NOMO = (() => {
-  const coefDist = 2.76
-  const calibConst = -2.48
+  // Rangos de ejes según nomograma de referencia INPRES
+  const spMin = 2, spMax = 50 // S-P en segundos
+  const ampMin = 0.1, ampMax = 100 // Amplitud en mm
 
-  // Rangos de ejes según imagen de referencia
-  const distMin = 20, distMax = 800
-  const ampMin = 0.1, ampMax = 500
-
-  const logDistMin = Math.log10(distMin) // 1.301
-  const logDistMax = Math.log10(distMax) // 2.903
-  const logDistRange = logDistMax - logDistMin // 1.602
+  const logSPMin = Math.log10(spMin) // 0.301
+  const logSPMax = Math.log10(spMax) // 1.699
+  const logSPRange = logSPMax - logSPMin // 1.398
 
   const logAmpMin = Math.log10(ampMin) // -1
-  const logAmpMax = Math.log10(ampMax) // 2.699
-  const logAmpRange = logAmpMax - logAmpMin // 3.699
+  const logAmpMax = Math.log10(ampMax) // 2
+  const logAmpRange = logAmpMax - logAmpMin // 3
 
-  // Alturas lógicas escaladas
-  const hDist = coefDist * logDistRange // 4.42
-  const hAmp = logAmpRange // 3.699
-  const hMag = hDist + hAmp // 8.12 = Mrange total del eje central
+  // Rango total de magnitud determinado por la geometría del nomograma
+  const M_range = 3 * logSPRange + logAmpRange // 3×1.398 + 3 = 7.194
 
-  // α: posición del eje central (desde la izquierda) para que la regla funcione
-  const alpha = hDist / hMag // ≈ 0.544
+  // α: posición del eje central desde la izquierda
+  const alpha = logAmpRange / M_range // 3/7.194 ≈ 0.417
 
-  // Magnitud efectiva mínima y máxima (determinada por la geometría)
-  // Cuando D=Dmin (fondo izq) y A=Amin (fondo der):
-  // ML = log₁₀(Amin) + coefDist×log₁₀(Dmin) + calibConst
-  const magMin_eff = logAmpMin + coefDist * logDistMin + calibConst // ≈ 0.11
-  const magMax_eff = magMin_eff + hMag // ≈ 8.23
+  // Magnitud mínima (cuando S-P=min y A=min están en el fondo)
+  // ML = log₁₀(A_min) + 3×log₁₀(SP_min) + 3×log₁₀(8) − 2.92
+  const magMin_eff = Math.log10(ampMin) + 3 * Math.log10(spMin) + 3 * Math.log10(8) - 2.92 // ≈ -0.308
+  const magMax_eff = magMin_eff + M_range // ≈ 6.886
 
-  // Rango visible de ticks de magnitud
-  const magMin = 1.0, magMax = 8.0
+  // Rango visible de ticks
+  const magMin = 0, magMax = 7
 
   return {
     magMin, magMax,
-    magMin_eff, magMax_eff, hMag, hDist, hAmp,
-    coefDist, calibConst,
+    magMin_eff, magMax_eff, M_range,
     ampMin, ampMax, logAmpMin, logAmpMax, logAmpRange,
-    distMin, distMax, logDistMin, logDistMax, logDistRange,
+    spMin, spMax, logSPMin, logSPMax, logSPRange,
     alpha,
     padTop: 50, padBottom: 60, padLeft: 80, padRight: 80,
   }
@@ -128,25 +105,25 @@ const NOMO = (() => {
 
 // ── Funciones de mapeo valor → pixel Y ──
 // Los 3 ejes comparten la misma altura en px pero cubren diferentes rangos lógicos.
-// Cada eje se normaliza a [0,1] independientemente: 0 = fondo (bot), 1 = tope (top).
+// Normalización a [0,1]: 0 = fondo (bot), 1 = tope (top).
 function normToY(t, top, bot) { return bot - t * (bot - top) }
 
-// Magnitud: lineal, M ∈ [magMin_eff, magMax_eff] → [0, 1]
-function normMag(M) { return (M - NOMO.magMin_eff) / NOMO.hMag }
-function magToY(M, top, bot) { return normToY(normMag(M), top, bot) }
+// S-P: log₁₀(Δt) normalizado sobre logSPRange → [0, 1]
+function normSP(sp) { return (Math.log10(sp) - NOMO.logSPMin) / NOMO.logSPRange }
+function spToY(sp, top, bot) { return normToY(normSP(sp), top, bot) }
 
 // Amplitud: log₁₀(A) normalizado sobre logAmpRange → [0, 1]
 function normAmp(A) { return (Math.log10(A) - NOMO.logAmpMin) / NOMO.logAmpRange }
 function ampToY(A, top, bot) { return normToY(normAmp(A), top, bot) }
 
-// Distancia: log₁₀(D) normalizado sobre logDistRange → [0, 1]
-function normDist(D) { return (Math.log10(D) - NOMO.logDistMin) / NOMO.logDistRange }
-function distToY(D, top, bot) { return normToY(normDist(D), top, bot) }
+// Magnitud: lineal, M ∈ [magMin_eff, magMax_eff] → [0, 1]
+function normMag(M) { return (M - NOMO.magMin_eff) / NOMO.M_range }
+function magToY(M, top, bot) { return normToY(normMag(M), top, bot) }
 
 // Pixel Y → Magnitud (inversa para clicks en el eje central)
 function yToMag(y, top, bot) {
   const t = (bot - y) / (bot - top)
-  return NOMO.magMin_eff + t * NOMO.hMag
+  return NOMO.magMin_eff + t * NOMO.M_range
 }
 
 function renderNomogram() {
@@ -186,18 +163,18 @@ function renderNomogram() {
   ctx.setLineDash([4, 4])
   ctx.strokeStyle = '#e5e7eb'
   ctx.lineWidth = 0.7
-  for (let m = 2; m <= 7; m++) {
+  for (let m = 1; m <= 6; m++) {
     const y = magToY(m, top, bot)
     ctx.beginPath(); ctx.moveTo(xLeft, y); ctx.lineTo(xRight, y); ctx.stroke()
   }
   ctx.setLineDash([])
 
-  // ── Dibujar los tres ejes verticales (misma altura) ──
+  // ── Dibujar los tres ejes verticales ──
   ctx.strokeStyle = '#1f2937'
   ctx.lineWidth = 2
-  // Izquierdo – Distancia
+  // Izquierdo – S-P (seg)
   ctx.beginPath(); ctx.moveTo(xLeft, top); ctx.lineTo(xLeft, bot); ctx.stroke()
-  // Centro – Magnitud (ligeramente más grueso)
+  // Centro – Magnitud
   ctx.lineWidth = 2.5
   ctx.beginPath(); ctx.moveTo(xMid, top); ctx.lineTo(xMid, bot); ctx.stroke()
   ctx.lineWidth = 2
@@ -208,9 +185,9 @@ function renderNomogram() {
   ctx.textAlign = 'center'
   ctx.font = 'bold 13px Poppins, sans-serif'
   ctx.fillStyle = '#1f2937'
-  ctx.fillText('Distancia', xLeft, top - 22)
+  ctx.fillText('S - P', xLeft, top - 22)
   ctx.font = '11px Poppins, sans-serif'
-  ctx.fillText('(km)', xLeft, top - 8)
+  ctx.fillText('(seg)', xLeft, top - 8)
   ctx.font = 'bold 13px Poppins, sans-serif'
   ctx.fillText('Magnitud', xMid, top - 22)
   ctx.font = '11px Poppins, sans-serif'
@@ -220,27 +197,24 @@ function renderNomogram() {
   ctx.font = '11px Poppins, sans-serif'
   ctx.fillText('(mm)', xRight, top - 8)
 
-  // Title
-  ctx.font = 'bold 18px Poppins, sans-serif'
-  ctx.fillStyle = '#00214f'
-
-  // ── Ticks de Distancia (eje izquierdo, log₁₀) ──
-  const distTicks = [20, 30, 40, 50, 60, 80, 100, 150, 200, 300, 400, 500, 600, 700, 800]
+  // ── Ticks de S-P (eje izquierdo, log₁₀) ──
+  const spTicks = [2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 40, 50]
   ctx.font = '11px Poppins, sans-serif'
   ctx.fillStyle = '#374151'
   ctx.textAlign = 'right'
-  distTicks.forEach((d) => {
-    if (d < NOMO.distMin || d > NOMO.distMax) return
-    const y = distToY(d, top, bot)
+  spTicks.forEach((sp) => {
+    if (sp < NOMO.spMin || sp > NOMO.spMax) return
+    const y = spToY(sp, top, bot)
     ctx.beginPath(); ctx.moveTo(xLeft - 6, y); ctx.lineTo(xLeft, y); ctx.strokeStyle = '#374151'; ctx.lineWidth = 1; ctx.stroke()
-    ctx.fillText(d.toString(), xLeft - 10, y + 4)
+    ctx.fillText(sp.toString(), xLeft - 10, y + 4)
     ctx.beginPath(); ctx.moveTo(xLeft, y); ctx.lineTo(xLeft + 6, y); ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 0.5; ctx.stroke()
   })
 
-  // ── Ticks de Magnitud (eje central, lineal 1.0–8.0) ──
+  // ── Ticks de Magnitud (eje central, lineal 0–7) ──
   ctx.textAlign = 'center'
-  for (let m = 1.0; m <= 8.0; m += 0.5) {
+  for (let m = 0; m <= 7.0; m += 0.5) {
     const y = magToY(m, top, bot)
+    if (y < top || y > bot) continue
     const isInt = Number.isInteger(m)
     ctx.beginPath()
     ctx.moveTo(xMid - (isInt ? 8 : 4), y)
@@ -248,15 +222,15 @@ function renderNomogram() {
     ctx.strokeStyle = '#374151'
     ctx.lineWidth = isInt ? 1.5 : 0.8
     ctx.stroke()
-    if (isInt || m === 1.5 || m === 2.5) {
-      ctx.font = isInt ? 'bold 12px Poppins, sans-serif' : '10px Poppins, sans-serif'
+    if (isInt) {
+      ctx.font = 'bold 12px Poppins, sans-serif'
       ctx.fillStyle = '#1f2937'
-      ctx.fillText(m.toFixed(1), xMid - 22, y + 4)
+      ctx.fillText(m.toFixed(0), xMid - 22, y + 4)
     }
   }
 
   // ── Ticks de Amplitud (eje derecho, log₁₀) ──
-  const ampTicks = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500]
+  const ampTicks = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100]
   ctx.textAlign = 'left'
   ctx.font = '11px Poppins, sans-serif'
   ctx.fillStyle = '#374151'
@@ -268,25 +242,24 @@ function renderNomogram() {
     ctx.beginPath(); ctx.moveTo(xRight - 6, y); ctx.lineTo(xRight, y); ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 0.5; ctx.stroke()
   })
 
-  // ── Dibujar líneas de estaciones (línea recta única de D a A) ──
+  // ── Dibujar líneas de estaciones (línea recta de S-P a Amplitud) ──
   stationData.value.forEach((d) => {
     if (!stationVisibility.value[d.station]) return
-    if (!d.magnitude || d.maxAmp <= 0 || d.distance <= 0) return
+    if (!d.magnitude || d.maxAmp <= 0 || d.deltaSP <= 0) return
 
     // Clamp to axis range
-    const cDist = Math.min(Math.max(d.distance, NOMO.distMin), NOMO.distMax)
+    const cSP = Math.min(Math.max(d.deltaSP, NOMO.spMin), NOMO.spMax)
     const cAmp = Math.min(Math.max(d.maxAmp, NOMO.ampMin), NOMO.ampMax)
 
-    const yDist = distToY(cDist, top, bot)
+    const ySP = spToY(cSP, top, bot)
     const yAmp = ampToY(cAmp, top, bot)
 
-    // La magnitud es DONDE la línea recta cruza el eje central
-    // yMag = yDist + α·(yAmp − yDist) por interpolación lineal
-    const yMag = yDist + NOMO.alpha * (yAmp - yDist)
+    // La magnitud es donde la línea recta cruza el eje central
+    const yMag = ySP + NOMO.alpha * (yAmp - ySP)
 
-    // Línea recta ÚNICA de distancia a amplitud
+    // Línea recta de S-P a Amplitud
     ctx.beginPath()
-    ctx.moveTo(xLeft, yDist)
+    ctx.moveTo(xLeft, ySP)
     ctx.lineTo(xRight, yAmp)
     ctx.strokeStyle = d.color
     ctx.lineWidth = 2
@@ -296,8 +269,8 @@ function renderNomogram() {
 
     // Puntos en cada eje
     const dotR = 5
-    // Distancia
-    ctx.beginPath(); ctx.arc(xLeft, yDist, dotR, 0, Math.PI * 2); ctx.fillStyle = d.color; ctx.fill()
+    // S-P
+    ctx.beginPath(); ctx.arc(xLeft, ySP, dotR, 0, Math.PI * 2); ctx.fillStyle = d.color; ctx.fill()
     ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke()
     // Magnitud (intersección con el eje central)
     ctx.beginPath(); ctx.arc(xMid, yMag, dotR + 1, 0, Math.PI * 2); ctx.fillStyle = d.color; ctx.fill()
@@ -310,7 +283,7 @@ function renderNomogram() {
     ctx.font = 'bold 11px Poppins, sans-serif'
     ctx.fillStyle = d.color
     ctx.textAlign = 'right'
-    ctx.fillText(d.station, xLeft - 10, yDist - 8)
+    ctx.fillText(d.station, xLeft - 10, ySP - 8)
 
     // Etiqueta de magnitud junto al punto central
     const magVal = yToMag(yMag, top, bot)
@@ -395,12 +368,6 @@ async function confirmMagnitude(mag) {
   }
 }
 
-function useSuggestedMagnitude() {
-  if (avgMagnitude.value != null) {
-    confirmMagnitude(parseFloat(avgMagnitude.value.toFixed(1)))
-  }
-}
-
 function goBack() {
   store.prevStep()
 }
@@ -460,10 +427,12 @@ onUnmounted(() => {
     <!-- Info box -->
     <div class="bg-igp-sky-blue-50 border border-igp-sky-blue-200 rounded-xl p-3 sm:p-4 mb-6 text-xs sm:text-sm text-igp-sky-blue-800">
       <p class="font-semibold mb-1">¿Cómo funciona el Nomograma de Richter?</p>
-      <p>
-        El nomograma tiene tres ejes verticales: Distancia (izquierda), Magnitud (centro) y Amplitud (derecha).
-        Una línea recta desde la distancia de la estación hasta su amplitud cruza el eje central en la magnitud correspondiente.
-        Haz clic sobre el eje de Magnitud para seleccionar el valor del sismo.
+      <p class="mb-2">
+        El nomograma tiene tres ejes verticales: <strong>S-P (seg)</strong> a la izquierda, <strong>Magnitud Richter</strong> al centro y <strong>Amplitud (mm)</strong> a la derecha.
+        Una línea recta desde el valor S-P de cada estación hasta su amplitud cruza el eje central en la magnitud correspondiente.
+      </p>
+      <p class="font-semibold text-igp-blue">
+        👉 Para seleccionar la magnitud del sismo, haz clic directamente sobre el <strong>eje central de Magnitud</strong> en el nomograma, en el valor que consideres correcto.
       </p>
     </div>
 
@@ -486,15 +455,6 @@ onUnmounted(() => {
         {{ d.station }}
         <span v-if="d.magnitude" class="text-xs opacity-75">(ML={{ d.magnitude.toFixed(1) }})</span>
       </button>
-
-      <button
-        v-if="avgMagnitude != null && selectedMagnitude == null"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all cursor-pointer"
-        @click="useSuggestedMagnitude"
-      >
-        <AppIcon name="zap" :size="16" />
-        Usar sugerida: {{ avgMagnitude.toFixed(1) }} ML
-      </button>
     </div>
 
     <!-- Magnitude result display -->
@@ -510,7 +470,7 @@ onUnmounted(() => {
       </div>
       <button
         class="px-4 py-2 rounded-xl text-sm font-semibold bg-white text-red-600 border border-red-200 hover:bg-red-50 cursor-pointer transition-all"
-        @click="selectedMagnitude = null; store.setUserMagnitude(null); renderChart()"
+        @click="selectedMagnitude = null; store.setUserMagnitude(null); renderNomogram()"
       >
         Cambiar
       </button>
@@ -542,6 +502,7 @@ onUnmounted(() => {
           <thead class="bg-gray-50">
             <tr>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Estación</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-600">S-P (seg)</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Distancia (km)</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Amplitud (mm)</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Magnitud (ML)</th>
@@ -560,6 +521,7 @@ onUnmounted(() => {
                   {{ d.station }}
                 </span>
               </td>
+              <td class="px-4 py-3 font-mono font-semibold text-igp-blue">{{ d.deltaSP.toFixed(2) }}</td>
               <td class="px-4 py-3 font-mono font-semibold text-igp-blue">{{ d.distance.toFixed(1) }}</td>
               <td class="px-4 py-3 font-mono font-semibold text-igp-blue">{{ d.maxAmp.toFixed(3) }}</td>
               <td class="px-4 py-3">
@@ -568,7 +530,7 @@ onUnmounted(() => {
               </td>
             </tr>
             <tr v-if="avgMagnitude != null" class="border-t-2 border-gray-200 bg-gray-50">
-              <td class="px-4 py-3 font-bold text-igp-blue" colspan="3">Promedio</td>
+              <td class="px-4 py-3 font-bold text-igp-blue" colspan="4">Promedio</td>
               <td class="px-4 py-3 font-mono font-bold text-red-600 text-lg">{{ avgMagnitude.toFixed(2) }} ML</td>
             </tr>
           </tbody>
@@ -584,11 +546,14 @@ onUnmounted(() => {
       </h3>
       <div class="bg-white/10 rounded-xl p-4 text-center">
         <p class="text-lg font-mono font-semibold">
-          ML = log₁₀(A) + log₁₀(D)
+          ML = log₁₀(A) + 3×log₁₀(8×Δt<sub>S-P</sub>) − 2.92
         </p>
         <p class="text-sm text-gray-300 mt-2">
-          A = Amplitud máxima (mm) | D = Distancia epicentral (km)
+          A = Amplitud máxima (mm) | Δt<sub>S-P</sub> = Diferencia de tiempo S - P (seg)
         </p>
+      </div>
+      <div class="mt-3 text-xs text-white/60">
+        <p>Fuente: Instituto Nacional de Prevención Sísmica (INPRES)</p>
       </div>
     </div>
 
