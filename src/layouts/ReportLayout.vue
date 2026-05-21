@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import AppHeader from '@/components/organisms/AppHeader.vue'
 import AppCintillo from '@/components/organisms/AppCintillo.vue'
 import AppIcon from '@/components/atoms/AppIcon.vue'
@@ -7,6 +8,7 @@ import SeismicDetailTabs from '@/components/organisms/SeismicDetailTabs.vue'
 import { useReportStore } from '@/stores/reportStore'
 
 const store = useReportStore()
+const router = useRouter()
 const mainContentRef = ref(null)
 
 watch(() => store.currentStep, () => {
@@ -59,6 +61,18 @@ function getEpicentroFallback(recordId) {
   return `./records/${recordId}/epicentro_${num}.JPG`
 }
 
+async function handleSave() {
+  const { default: Swal } = await import('sweetalert2')
+  Swal.fire({
+    title: '¡Guardado!',
+    text: 'Tu progreso ha sido guardado.',
+    icon: 'success',
+    timer: 1800,
+    showConfirmButton: false,
+    confirmButtonColor: '#04b363',
+  })
+}
+
 function handleNextStep() {
   store.markCompleted(store.currentStep)
   store.nextStep()
@@ -73,10 +87,74 @@ function handleNextStep() {
       <!-- Column 1: Steps Sidebar -->
       <aside class="w-60 bg-white border-r border-gray-200 shrink-0 hidden lg:flex flex-col animate-slideRight">
         <div class="p-4 border-b border-gray-100">
-          <h3 class="text-[10px] font-bold text-igp-dark-blue uppercase tracking-wider">
-            Pasos del Reporte
+          <h3 class="text-sm font-extrabold text-igp-dark-blue leading-tight">
+            Creando tu reporte sísmico IGP
           </h3>
-          <div class="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <p class="text-[10px] text-gray-400 mt-1.5 leading-relaxed">
+            Para convertirte en operador sísmico del IGP, completa correctamente los siguientes pasos.
+          </p>
+        </div>
+
+        <nav class="flex-1 p-2 space-y-0.5 overflow-y-auto">
+          <div
+            v-for="(step, idx) in steps"
+            :key="step.id"
+            class="w-full animate-fadeSlideIn"
+            :style="{ animationDelay: (idx * 60) + 'ms' }"
+          >
+            <div
+              class="flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-all duration-200 select-none"
+              :class="[
+                currentStep === step.id
+                  ? 'bg-igp-dark-blue text-white shadow-md'
+                  : store.isCompleted(step.id)
+                    ? 'bg-igp-green-50 text-igp-green-800'
+                    : 'text-gray-300'
+              ]"
+            >
+              <div
+                class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold"
+                :class="[
+                  currentStep === step.id
+                    ? 'bg-white/20 text-white'
+                    : store.isCompleted(step.id)
+                      ? 'bg-igp-green-700 text-white'
+                      : 'bg-gray-100 text-gray-400'
+                ]"
+              >
+                <span>{{ step.id }}</span>
+              </div>
+              <p class="text-[11px] font-semibold truncate">{{ step.title }}</p>
+            </div>
+
+            <!-- Sub-steps: station validations for step 2 -->
+            <div
+              v-if="step.id === 2 && currentStep === 2 && store.stations.length > 0"
+              class="ml-3 mt-1 space-y-0.5 pl-3 border-l-2 border-gray-200"
+            >
+              <div
+                v-for="station in store.stations"
+                :key="station"
+                class="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs transition-colors"
+                :class="store.savedStationInputs[station]?.validated ? 'text-igp-green-800' : 'text-gray-400'"
+              >
+                <div
+                  class="w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 border"
+                  :class="store.savedStationInputs[station]?.validated
+                    ? 'bg-igp-green-700 border-igp-green-700'
+                    : 'bg-white border-gray-300'"
+                >
+                  <span v-if="store.savedStationInputs[station]?.validated" class="text-white" style="font-size:8px;line-height:1">✓</span>
+                </div>
+                <span class="font-medium">{{ station }}</span>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <!-- Progress bar -->
+        <div class="px-4 py-2 border-t border-gray-100">
+          <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div
               class="h-full bg-igp-green-700 rounded-full transition-all duration-500"
               :style="{ width: store.progress + '%' }"
@@ -85,49 +163,30 @@ function handleNextStep() {
           <p class="text-[10px] text-gray-400 mt-1">{{ store.progress }}% completado</p>
         </div>
 
-        <nav class="flex-1 p-2 space-y-0.5 overflow-y-auto">
-          <div
-            v-for="(step, idx) in steps"
-            :key="step.id"
-            class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-all duration-200 animate-fadeSlideIn select-none"
-            :style="{ animationDelay: (idx * 60) + 'ms' }"
-            :class="[
-              currentStep === step.id
-                ? 'bg-igp-dark-blue text-white shadow-md'
-                : store.isCompleted(step.id)
-                  ? 'bg-igp-green-50 text-igp-green-800'
-                  : 'text-gray-300'
-            ]"
-          >
-            <div
-              class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold"
-              :class="[
-                currentStep === step.id
-                  ? 'bg-white/20 text-white'
-                  : store.isCompleted(step.id)
-                    ? 'bg-igp-green-700 text-white'
-                    : 'bg-gray-100 text-gray-400'
-              ]"
-            >
-              <AppIcon
-                v-if="store.isCompleted(step.id) && currentStep !== step.id"
-                name="check"
-                :size="12"
-              />
-              <span v-else>{{ step.id }}</span>
-            </div>
-            <p class="text-[11px] font-semibold truncate">{{ step.title }}</p>
-          </div>
-        </nav>
-
-        <!-- Change sismo option (visible when on step >= 2) -->
-        <div v-if="currentStep >= 2" class="p-3 border-t border-gray-100">
+        <!-- Bottom action buttons -->
+        <div class="p-3 border-t border-gray-100 space-y-1.5">
           <button
-            class="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-all duration-200 bg-igp-orange-50 text-igp-orange-700 hover:bg-igp-orange-100 cursor-pointer"
-            @click="handleChangeSeismo"
+            class="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-all duration-200 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 cursor-pointer"
+            @click="router.push({ name: 'Guide' })"
           >
-            <AppIcon name="refresh-cw" :size="14" />
-            <p class="text-[11px] font-semibold">Cambiar sismo</p>
+            <AppIcon name="help-circle" :size="14" class="text-igp-dark-blue shrink-0" />
+            <p class="text-[11px] font-semibold">Consultar Guía</p>
+          </button>
+          <button
+            class="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-all duration-200 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 cursor-pointer"
+            @click="handleSave"
+          >
+            <AppIcon name="save" :size="14" class="text-igp-dark-blue shrink-0" />
+            <p class="text-[11px] font-semibold">Guardar</p>
+          </button>
+          <button
+            class="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer"
+            :class="currentStep >= 2 ? 'bg-igp-orange-50 text-igp-orange-700 hover:bg-igp-orange-100' : 'bg-gray-50 text-gray-300'"
+            :disabled="currentStep < 2"
+            @click="currentStep >= 2 && handleChangeSeismo()"
+          >
+            <AppIcon name="refresh-cw" :size="14" class="shrink-0" />
+            <p class="text-[11px] font-semibold">Cambiar Sismo</p>
           </button>
         </div>
       </aside>
@@ -229,12 +288,7 @@ function handleNextStep() {
                         : 'bg-gray-200 text-gray-400'
                   ]"
                 >
-                  <AppIcon
-                    v-if="store.isCompleted(step.id) && currentStep !== step.id"
-                    name="check"
-                    :size="12"
-                  />
-                  <span v-else>{{ step.id }}</span>
+                  <span>{{ step.id }}</span>
                 </div>
                 <span
                   v-if="step.id < steps.length"
@@ -257,6 +311,20 @@ function handleNextStep() {
           <p v-if="currentStep >= 2" class="text-[10px] text-gray-400 mt-1 truncate">
             Paso {{ currentStep }}: {{ steps.find(s => s.id === currentStep)?.title }}
           </p>
+        </div>
+
+        <!-- Desktop: Current step indicator -->
+        <div class="hidden lg:flex items-center gap-3 px-5 py-3 bg-white border-b border-gray-100 shrink-0">
+          <div
+            class="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0"
+            :class="store.isCompleted(currentStep) ? 'bg-igp-green-700' : 'bg-igp-dark-blue'"
+          >
+            {{ currentStep }}
+          </div>
+          <div>
+            <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Paso {{ currentStep }} de {{ steps.length }}</p>
+            <p class="text-sm font-extrabold text-igp-dark-blue leading-tight">{{ steps.find(s => s.id === currentStep)?.title }}</p>
+          </div>
         </div>
 
         <!-- Mobile: Back to earthquake list (step 1, quake selected) -->

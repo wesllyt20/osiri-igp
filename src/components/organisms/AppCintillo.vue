@@ -8,12 +8,12 @@ defineProps({
 const links = [
   { label: "Portal IGP", href: "https://www.igp.gob.pe", external: true },
   {
-    label: "Servicios",
+    label: "Aprende",
     href: "https://www.igp.gob.pe/servicios",
     external: true,
   },
   {
-    label: "Epicentro IGP",
+    label: "Operador sísmico",
     href: "https://ultimosismo.igp.gob.pe",
     external: true,
   },
