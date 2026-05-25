@@ -21,8 +21,8 @@ export const useReportStore = defineStore('report', () => {
   const totalSteps = 8
 
   const steps = [
-    { id: 1, title: 'Seleccionar Sismo', icon: 'target', shortTitle: 'Selección' },
-    { id: 2, title: 'Visualizar Ondas', icon: 'activity', shortTitle: 'Ondas' },
+    { id: 1, title: 'Seleccionar evento sísmico', icon: 'target', shortTitle: 'Selección' },
+    { id: 2, title: 'Completa los parámetros de las ondas sísmicas', icon: 'activity', shortTitle: 'Ondas' },
     { id: 3, title: 'Resumen de Datos', icon: 'file-text', shortTitle: 'Resumen' },
     { id: 4, title: 'Distancia Epicentral', icon: 'crosshair', shortTitle: 'Distancia' },
     { id: 5, title: 'Gráfico S-P', icon: 'trending-up', shortTitle: 'Gráfico S-P' },

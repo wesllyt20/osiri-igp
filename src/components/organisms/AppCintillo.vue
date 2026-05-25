@@ -25,7 +25,7 @@ const links = [
     class="bg-gray-50 border-b border-gray-200  z-40 py-1"
     :class="{ 'sticky top-16': sticky }"
   >
-    <div class="max-w-screen-2xl mx-auto px-4 lg:px-6">
+    <div class="px-[50px]">
       <div class="flex items-center gap-0 h-6 text-xs">
         <router-link
           to="/"
