@@ -417,7 +417,7 @@ function handleNextStep() {
                 </svg>
               </div>
               <div class="min-w-0 flex-1">
-                <p class="text-[10px] font-semibold text-gray-400 leading-snug uppercase tracking-wide">
+                <p class="text-[10px] font-semibold text-gray-600 leading-snug uppercase tracking-wide">
                   {{ item.label }}
                   <span
                     v-if="item.badge"
@@ -507,14 +507,14 @@ function handleNextStep() {
       <!-- Header -->
       <div class="mb-8 text-center animate-fadeSlideIn">
         <div
-          class="inline-flex items-center gap-2 px-3 py-1.5 text-igp-dark-blue text-xs font-bold uppercase tracking-wider rounded-full mb-4"
+          class="inline-flex items-center gap-2 px-3 py-1.5 text-igp-blue text-xs font-bold uppercase tracking-wider rounded-full mb-4"
           style="background: rgba(0, 40, 120, 0.08)"
         >
           <AppIcon name="activity" :size="14" />
           <span class="font-medium">Sistema de Reportes</span>
         </div>
         <h2 class="text-2xl font-medium text-gray-800">Reportes Sismicos del IGP</h2>
-        <p class="text-sm text-gray-500 mt-2 max-w-md mx-auto leading-relaxed">
+        <p class="text-sm text-gray mt-2 max-w-md mx-auto leading-relaxed">
           Visualiza la informacion completa de cada evento sismico: estaciones de monitoreo,
           formas de onda y datos tecnicos detallados.
         </p>
@@ -583,8 +583,8 @@ function handleNextStep() {
             <p class="text-sm font-extrabold text-igp-dark-blue group-hover:text-igp-blue transition-colors leading-snug">
               {{ rec.title }}
             </p>
-            <p class="text-xs text-gray-400 mt-0.5 truncate">{{ rec.subtitle }}</p>
-            <p class="text-[10px] mt-0.5" style="color: #bbb">{{ rec.info?.region }}</p>
+            <p class="text-xs text-gray-600 mt-0.5 truncate">{{ rec.subtitle }}</p>
+            <p class="text-[10px] text-gray-600 mt-0.5">{{ rec.info?.region }}</p>
           </div>
         </button>
       </div>
@@ -594,16 +594,16 @@ function handleNextStep() {
         class="grid grid-cols-3 gap-3 w-full max-w-lg mb-7 animate-fadeSlideIn"
         style="animation-delay: 550ms"
       >
-        <div class="text-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
-          <AppIcon name="map-pin" :size="24" class="text-igp-dark-blue mx-auto mb-1.5" />
+        <div class="text-center p-4 bg-white rounded-xl border border-gray-200 ">
+          <AppIcon name="map-pin" :size="24" class="text-igpblack mx-auto mb-1.5" />
           <p class="text-[11px] font-semibold text-gray-600">Estaciones</p>
         </div>
-        <div class="text-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
-          <AppIcon name="activity" :size="24" class="text-igp-dark-blue mx-auto mb-1.5" />
+        <div class="text-center p-4 bg-white rounded-xl border border-gray-200 ">
+          <AppIcon name="activity" :size="24" class="text-igpblack mx-auto mb-1.5" />
           <p class="text-[11px] font-semibold text-gray-600">Ondas Sismicas</p>
         </div>
-        <div class="text-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
-          <AppIcon name="info" :size="24" class="text-igp-dark-blue mx-auto mb-1.5" />
+        <div class="text-center p-4 bg-white rounded-xl border border-gray-200 ">
+          <AppIcon name="info" :size="24" class="text-igpblack mx-auto mb-1.5" />
           <p class="text-[11px] font-semibold text-gray-600">Informacion</p>
         </div>
       </div>
@@ -614,7 +614,7 @@ function handleNextStep() {
         style="background: rgba(0,40,120,0.05); animation-delay: 650ms"
       >
         <svg
-          class="w-7 h-7 text-igp-dark-blue animate-bounce-left shrink-0"
+          class="w-7 h-7 text-igp-black animate-bounce-left shrink-0"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -626,8 +626,8 @@ function handleNextStep() {
           <polyline points="12 19 5 12 12 5" />
         </svg>
         <div>
-          <p class="text-sm font-extrabold text-igp-dark-blue">Selecciona un evento sismico</p>
-          <p class="text-[10px] text-gray-500">Elige un sismo de la lista para comenzar</p>
+          <p class="text-sm font-extrabold text-igp-black">Selecciona un evento sismico</p>
+          <p class="text-[10px] text-gray-600">Elige un sismo de la lista para comenzar</p>
         </div>
       </div>
 

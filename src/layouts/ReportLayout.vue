@@ -90,7 +90,7 @@ function handleNextStep() {
           <h3 class="text-sm font-medium text-igp-blue leading-tight">
             Creando tu reporte sísmico IGP
           </h3>
-          <p class="text-[10px] text-gray-400 mt-1.5 leading-relaxed">
+          <p class="text-[11px] text-black/80 mt-1.5 leading-relaxed">
             Para convertirte en operador sísmico del IGP, completa correctamente los siguientes pasos.
           </p>
         </div>
@@ -161,7 +161,7 @@ function handleNextStep() {
             <div class="w-7 h-7 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
               <AppIcon name="help-circle" :size="14" class="text-gray-600" />
             </div>
-            <p class="text-xs font-semibold">Consultar guía</p>
+            <p class="text-xs font-medium">Consultar guía</p>
           </button>
           <button
             class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-all duration-200 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm cursor-pointer group"
@@ -170,7 +170,7 @@ function handleNextStep() {
               class="w-7 h-7 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
               <AppIcon name="save" :size="14" class="text-gray-600" />
             </div>
-            <p class="text-xs font-semibold">Guardar</p>
+            <p class="text-xs font-medium">Guardar</p>
           </button>
           <button
             class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-all duration-200 cursor-pointer group"
@@ -180,7 +180,7 @@ function handleNextStep() {
               :class="currentStep >= 2 ? 'bg-igp-orange-100' : 'bg-gray-100'">
               <AppIcon name="refresh-cw" :size="14" class="shrink-0" />
             </div>
-            <p class="text-xs font-semibold">Cambiar sismo</p>
+            <p class="text-xs font-medium">Cambiar sismo</p>
           </button>
         </div>
       </aside>
@@ -228,12 +228,12 @@ function handleNextStep() {
                       {{ record.title }}
                     </p>
                     <p class="text-[10px] truncate"
-                      :class="selectedQuake?.id === record.id ? 'text-white/70' : 'text-gray-400'">
+                      :class="selectedQuake?.id === record.id ? 'text-white/70' : 'text-gray-500'">
                       {{ record.info.region }}
                     </p>
                     <div class="flex items-center gap-1.5 mt-0.5">
                       <span class="text-[9px] font-medium"
-                        :class="selectedQuake?.id === record.id ? 'text-white/60' : 'text-gray-400'">
+                        :class="selectedQuake?.id === record.id ? 'text-white/60' : 'text-gray-500'">
                         {{ formatDateShort(record.date) }}
                       </span>
                       <!-- <span
