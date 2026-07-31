@@ -49,7 +49,7 @@ export const SEISMIC_RECORDS = [
   {
     id: '1_20250725_043114',
     // ─ Nombre editable que se muestra en la interfaz ─
-    title: 'Sismo A',
+    title: 'Evento 01',
     subtitle: '41 km de Chulucanas, Morropon',
     date: '2025-07-25',
     time: '04:31:14',
@@ -74,12 +74,13 @@ export const SEISMIC_RECORDS = [
       poblacion: '~800,000 habitantes en zona de influencia',
       intensidadMaxima: '--',
       observaciones: 'Evento de tipo cortical. Sentido en Piura metropolitana y localidades cercanas. No se reportaron daños.',
-      id_event: '2025-0492'
+      id_event: '2025-0492',
+      dateTime: '25 de Julio de 2025 a las 04:31:14 horas.'
     },
   },
   {
     id: '2_20210115_151343',
-    title: 'Sismo B',
+    title: 'Evento 02',
     subtitle: '28 km de Mancora',
     date: '2021-01-15',
     time: '15:13:43',
@@ -101,12 +102,13 @@ export const SEISMIC_RECORDS = [
       poblacion: '~500,000 habitantes',
       intensidadMaxima: 'III (MM)',
       observaciones: 'Evento superficial, sentido ligeramente en la zona urbana.',
-      id_event: '2021-0019'
+      id_event: '2021-0019',
+      dateTime: '15 de Enero de 2021 a las 15:13:43 horas.'
     },
   },
   {
     id: '3_20220716_081843',
-    title: 'Sismo C',
+    title: 'Evento 03',
     subtitle: '61 km de Huarmey',
     date: '2022-07-16',
     time: '08:18:43',
@@ -127,12 +129,13 @@ export const SEISMIC_RECORDS = [
       poblacion: '~300,000 habitantes',
       intensidadMaxima: 'IV (MM)',
       observaciones: 'Evento moderado en zona con historial de actividad sísmica.',
-      id_event: '2022-0449'
+      id_event: '2022-0449',
+      dateTime: '16 de Julio de 2022 a las 08:18:43 horas.'
     },
   },
   {
     id: '4_20230223_061804',
-    title: 'Sismo D',
+    title: 'Evento 04',
     subtitle: '16 km de Huallanca, Huaylas',
     date: '2023-02-23',
     time: '06:18:04',
@@ -154,12 +157,13 @@ export const SEISMIC_RECORDS = [
       poblacion: '~1,000,000 habitantes',
       intensidadMaxima: '--',
       observaciones: 'Sismo de profundidad superficial, ampliamente sentido.',
-      id_event: '2023-0086'
+      id_event: '2023-0086',
+      dateTime: '23 de Febrero de 2023 a las 06:18:04 horas.'
     },
   },
   {
     id: '5_20240912_232713',
-    title: 'Sismo E',
+    title: 'Evento 05',
     subtitle: '7 Km de Chuco, Santiago de Chuco',
     date: '2024-09-12',
     time: '23:27:13',
@@ -181,12 +185,13 @@ export const SEISMIC_RECORDS = [
       poblacion: '~200,000 habitantes',
       intensidadMaxima: 'IV (MM)',
       observaciones: 'Evento nocturno, reportado levemente.',
-      id_event: '2024-0581'
+      id_event: '2024-0581',
+      dateTime: '12 de Septiembre de 2024 a las 23:27:13 horas.'
     },
   },
   {
     id: '6_20210420_045329',
-    title: 'Sismo F',
+    title: 'Evento 06',
     subtitle: '21 km de Chilca, Cañete',
     date: '2021-04-20',
     time: '04:53:29',
@@ -208,12 +213,13 @@ export const SEISMIC_RECORDS = [
       poblacion: '~500,000 habitantes',
       intensidadMaxima: 'IV - V (MM)',
       observaciones: 'Sismo superficial en zona andina.',
-      id_event: '2021-0203'
+      id_event: '2021-0203',
+      dateTime: '20 de Abril de 2021 a las 04:53:29 horas.'
     },
   },
   {
     id: '7_20240510_123448',
-    title: 'Sismo G',
+    title: 'Evento 07',
     subtitle: '31 km de Aguaytia, Padre Abad',
     date: '2024-05-10',
     time: '12:34:48',
@@ -235,12 +241,13 @@ export const SEISMIC_RECORDS = [
       poblacion: '~150,000 habitantes',
       intensidadMaxima: 'IV (MM)',
       observaciones: 'Evento diurno, sin daños reportados.',
-      id_event: '2024-0311'
+      id_event: '2024-0311',
+      dateTime: '10 de Mayo de 2024 a las 12:34:48 horas.'
     },
   },
   {
     id: '8_20241221_212533',
-    title: 'Sismo H',
+    title: 'Evento 08',
     subtitle: '13 km de Marcona, Nazca',
     date: '2024-12-21',
     time: '21:25:33',
@@ -261,12 +268,13 @@ export const SEISMIC_RECORDS = [
       poblacion: '~250,000 habitantes',
       intensidadMaxima: 'IV (MM)',
       observaciones: 'Evento moderado sentido en la región.',
-      id_event: '2024-0778'
+      id_event: '2024-0778',
+      dateTime: '21 de Diciembre de 2024 a las 21:25:33 horas.'
     },
   },
   {
     id: '9_20210208_211100',
-    title: 'Sismo I',
+    title: 'Evento 09',
     subtitle: '1 km de Arequipa',
     date: '2021-02-08',
     time: '21:11:00',
@@ -288,12 +296,13 @@ export const SEISMIC_RECORDS = [
       poblacion: '~1,200,000 habitantes',
       intensidadMaxima: 'III (MM)',
       observaciones: 'Sismo sentido ampliamente en Arequipa metropolitana.',
-      id_event: '2021-0067'
+      id_event: '2021-0067',
+      dateTime: '8 de Febrero de 2021 a las 21:11:00 horas.'
     },
   },
   {
     id: '10_20221208_231856',
-    title: 'Sismo J',
+    title: 'Evento 10',
     subtitle: '6 km de Huambo, Caylloma',
     date: '2022-12-08',
     time: '23:18:56',
@@ -315,12 +324,13 @@ export const SEISMIC_RECORDS = [
       poblacion: '~80,000 habitantes',
       intensidadMaxima: 'V (MM)',
       observaciones: 'Evento moderado en la sierra sur.',
-      id_event: '2022-762'
+      id_event: '2022-762',
+      dateTime: '8 de Diciembre de 2022 a las 23:18:56 horas.'
     },
   },
   {
     id: '11_20220713_091333',
-    title: 'Sismo K',
+    title: 'Evento 11',
     subtitle: '37 km de Omate, General Sánchez Cerro',
     date: '2022-07-13',
     time: '09:13:33',
@@ -342,12 +352,13 @@ export const SEISMIC_RECORDS = [
       poblacion: '~400,000 habitantes',
       intensidadMaxima: 'IV - V (MM)',
       observaciones: 'Sismo de profundidad intermedia en zona de subducción.',
-      id_event: '2022-0434'
+      id_event: '2022-0434',
+      dateTime: '13 de Julio de 2022 a las 09:13:33 horas.'
     },
   },
   {
     id: '12_20220411_050644',
-    title: 'Sismo L',
+    title: 'Evento 12',
     subtitle: '28 km al SE de Locumba, Jorge Basadre',
     date: '2022-04-11',
     time: '05:06:44',
@@ -369,12 +380,13 @@ export const SEISMIC_RECORDS = [
       poblacion: '~100,000 habitantes',
       intensidadMaxima: 'V (MM)',
       observaciones: 'Evento significativo cerca de la frontera con Chile.',
-      id_event: '2022-0234'
+      id_event: '2022-0234',
+      dateTime: '11 de Abril de 2022 a las 05:06:44 horas.'
     },
   },
   {
     id: '13_20230717_095841',
-    title: 'Sismo M',
+    title: 'Evento 13',
     subtitle: '29 km al S de Tingo Maria, Leoncio Prado',
     date: '2023-07-17',
     time: '09:58:41',
@@ -396,7 +408,8 @@ export const SEISMIC_RECORDS = [
       poblacion: '~300,000 habitantes',
       intensidadMaxima: 'IV (MM)',
       observaciones: 'Sismo moderado en la sierra central.',
-      id_event: '2023-0393'
+      id_event: '2023-0393',
+      dateTime: '17 de Julio de 2023 a las 09:58:41 horas.'
     },
   },
 ]

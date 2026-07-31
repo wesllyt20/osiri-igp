@@ -359,26 +359,26 @@ function handleNextStep() {
 
 <template>
   <!-- ESTADO SELECCIONADO: vista unica sin pestanas -->
-  <div v-if="record" class="h-full flex flex-col bg-gray-50 overflow-hidden">
+  <div v-if="record" class="h-full flex flex-col bg-white overflow-hidden">
 
     <!-- Contenido scrolleable -->
-    <div class="flex-1 overflow-y-auto p-4">
-      <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+    <div class="flex-1 overflow-y-auto">
+      <div class="detail-layout bg-white">
 
       <!-- 1. MAPA centrado en las estaciones -->
-      <div class="relative bg-gray-200 shrink-0" style="height: 320px">
+      <div class="detail-map relative bg-gray-200 min-h-[320px] lg:min-h-0">
         <div id="seismic-detail-map" class="absolute inset-0 z-0" />
         <div class="absolute top-3 left-3 z-[400] pointer-events-none">
           <span
             class="inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm text-igp-dark-blue text-xs font-bold px-3 py-1.5 rounded-full shadow-md border border-white/60"
           >
             <AppIcon name="activity" :size="12" />
-            {{ record.title }} &mdash; {{ record.subtitle }}
+            {{ record.title }}
           </span>
         </div>
       </div>
 
-      <div class="p-5 space-y-7">
+      <div class="detail-information p-4 space-y-6">
 
         <!-- 2. DATOS DEL EVENTO -->
         <section>
@@ -387,11 +387,11 @@ function handleNextStep() {
             Datos del evento:
           </h3>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div
               v-for="item in eventInfoItems"
               :key="item.label"
-              class="bg-white rounded-2xl border border-gray-100 p-4 flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow duration-200"
+              class="bg-white rounded-xl border border-slate-200 p-3 flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow duration-200"
             >
               <div
                 class="w-11 h-11 flex items-center justify-center shrink-0 text-black"
@@ -440,12 +440,12 @@ function handleNextStep() {
 
           <div
             class="grid grid-cols-2 gap-3"
-            :class="sacImages.length > 2 ? 'lg:grid-cols-4' : 'lg:grid-cols-2'"
+            :class="sacImages.length > 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-2'"
           >
             <button
               v-for="(img, idx) in sacImages"
               :key="img.station"
-              class="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-igp-sky-blue-300 transition-all duration-200 group cursor-zoom-in text-left animate-fadeSlideIn"
+              class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-lg hover:border-igp-sky-blue-300 transition-all duration-200 group cursor-zoom-in text-left animate-fadeSlideIn"
               :style="{ animationDelay: idx * 60 + 'ms' }"
               @click="openModal(img.url, record.title + ' — ' + img.station + ' (' + img.name + ')')"
             >
@@ -636,6 +636,32 @@ function handleNextStep() {
 </template>
 
 <style scoped>
+.detail-layout {
+  display: grid;
+  min-height: 100%;
+}
+
+@media (min-width: 992px) {
+  .detail-layout {
+    grid-template-columns: minmax(430px, 0.9fr) minmax(500px, 1.15fr);
+    align-items: stretch;
+  }
+
+  .detail-information {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .detail-map {
+    grid-column: 2;
+    grid-row: 1;
+    height: 100%;
+    min-height: 650px;
+    position: sticky;
+    top: 0;
+  }
+}
+
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
