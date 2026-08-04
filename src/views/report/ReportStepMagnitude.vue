@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, nextTick, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, nextTick, reactive, ref, watch } from 'vue'
 import { useReportStore } from '@/stores/reportStore'
 import AppIcon from '@/components/atoms/AppIcon.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
@@ -18,6 +18,10 @@ const VP = SEISMIC_CONSTANTS.VP
 const VS = SEISMIC_CONSTANTS.VS
 
 const selectedMagnitude = ref(store.userMagnitude)
+const stationMagnitudeResults = reactive({})
+const calculatedAverageMagnitude = ref(null)
+const selectedCalculationStation = ref(null)
+const showMagnitudeCalculationModal = ref(false)
 
 // Station visibility toggles
 const stationVisibility = ref({})
@@ -47,11 +51,42 @@ const stationData = computed(() => {
     .filter(Boolean)
 })
 
-const avgMagnitude = computed(() => {
-  const mags = stationData.value.filter((d) => d.magnitude !== null).map((d) => d.magnitude)
-  if (!mags.length) return null
-  return mags.reduce((a, b) => a + b, 0) / mags.length
+const selectedCalculationRow = computed(() => {
+  if (!selectedCalculationStation.value) return null
+  return stationData.value.find((d) => d.station === selectedCalculationStation.value) || null
 })
+
+const allStationMagnitudesCalculated = computed(() => {
+  return stationData.value.length > 0 && stationData.value.every((d) => stationMagnitudeResults[d.station] != null)
+})
+
+const avgMagnitude = computed(() => calculatedAverageMagnitude.value)
+
+function openMagnitudeCalculation(station) {
+  selectedCalculationStation.value = station
+  showMagnitudeCalculationModal.value = true
+}
+
+function closeMagnitudeCalculation() {
+  showMagnitudeCalculationModal.value = false
+}
+
+function registerStationMagnitude() {
+  const row = selectedCalculationRow.value
+  if (!row?.magnitude) return
+  stationMagnitudeResults[row.station] = parseFloat(row.magnitude.toFixed(2))
+  calculatedAverageMagnitude.value = null
+  selectedMagnitude.value = null
+  store.setUserMagnitude(null)
+  closeMagnitudeCalculation()
+  renderNomogram()
+}
+
+function calculateAverageMagnitude() {
+  if (!allStationMagnitudesCalculated.value) return
+  const mags = stationData.value.map((d) => stationMagnitudeResults[d.station])
+  calculatedAverageMagnitude.value = mags.reduce((sum, mag) => sum + mag, 0) / mags.length
+}
 
 // ── Nomograma de Richter (Clásico) ──
 // Fórmula: ML = log₁₀(A) + 3×log₁₀(8×Δt_SP) − 2.92
@@ -99,7 +134,7 @@ const NOMO = (() => {
     ampMin, ampMax, logAmpMin, logAmpMax, logAmpRange,
     spMin, spMax, logSPMin, logSPMax, logSPRange,
     alpha,
-    padTop: 50, padBottom: 60, padLeft: 80, padRight: 80,
+    padTop: 56, padBottom: 38, padLeft: 80, padRight: 80,
   }
 })()
 
@@ -133,7 +168,7 @@ function renderNomogram() {
   const rect = canvas.parentElement.getBoundingClientRect()
   const W = rect.width
   const isMobile = W < 500
-  const H = isMobile ? 420 : 560
+  const H = isMobile ? 420 : 620
 
   canvas.width = W * dpr
   canvas.height = H * dpr
@@ -285,12 +320,8 @@ function renderNomogram() {
     ctx.textAlign = 'right'
     ctx.fillText(d.station, xLeft - 10, ySP - 8)
 
-    // Etiqueta de magnitud junto al punto central
-    const magVal = yToMag(yMag, top, bot)
-    ctx.textAlign = 'left'
-    ctx.fillText(magVal.toFixed(1) + ' ML', xMid + 10, yMag - 8)
-
     // Etiqueta de amplitud
+    ctx.textAlign = 'left'
     ctx.fillText(cAmp.toFixed(1), xRight + 10, yAmp - 8)
   })
 
@@ -314,6 +345,7 @@ function renderNomogram() {
 }
 
 function onCanvasClick(e) {
+  if (avgMagnitude.value == null) return
   const canvas = canvasRef.value
   if (!canvas) return
   const rect = canvas.getBoundingClientRect()
@@ -373,7 +405,9 @@ function goBack() {
 }
 
 function goNext() {
-  store.nextStep()
+  if (selectedMagnitude.value != null) {
+    store.nextStep()
+  }
 }
 
 let resizeObserver = null
@@ -403,7 +437,7 @@ onUnmounted(() => {
     <div class="mb-6 flex items-start justify-between flex-wrap gap-4">
       <div>
         <span class="inline-block px-3 py-1 bg-igp-blue-50 text-igp-blue text-xs font-bold uppercase tracking-wider rounded-full mb-3">
-          Paso 7
+          Paso 5
         </span>
         <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
           Magnitud en la Escala de Richter
@@ -417,44 +451,12 @@ onUnmounted(() => {
           <AppIcon name="arrow-left" :size="16" class="mr-1" />
           Atrás
         </AppButton>
-        <AppButton variant="primary" size="sm" @click="goNext">
+        <AppButton variant="primary" size="sm" :disabled="selectedMagnitude == null" @click="goNext"
+          :class="{ 'opacity-50 cursor-not-allowed': selectedMagnitude == null }">
           Siguiente
           <AppIcon name="arrow-right" :size="16" class="ml-1" />
         </AppButton>
       </div>
-    </div>
-
-    <!-- Info box -->
-    <div class="bg-igp-sky-blue-50 border border-igp-sky-blue-200 rounded-xl p-3 sm:p-4 mb-6 text-xs sm:text-sm text-igp-sky-blue-800">
-      <p class="font-semibold mb-1">¿Cómo funciona el Nomograma de Richter?</p>
-      <p class="mb-2">
-        El nomograma tiene tres ejes verticales: <strong>S-P (seg)</strong> a la izquierda, <strong>Magnitud Richter</strong> al centro y <strong>Amplitud (mm)</strong> a la derecha.
-        Una línea recta desde el valor S-P de cada estación hasta su amplitud cruza el eje central en la magnitud correspondiente.
-      </p>
-      <p class="font-semibold text-igp-blue">
-        👉 Para seleccionar la magnitud del sismo, haz clic directamente sobre el <strong>eje central de Magnitud</strong> en el nomograma, en el valor que consideres correcto.
-      </p>
-    </div>
-
-    <!-- Station toggle buttons -->
-    <div class="flex flex-wrap gap-2 mb-4">
-      <button
-        v-for="d in stationData"
-        :key="d.station"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 cursor-pointer"
-        :class="stationVisibility[d.station]
-          ? 'text-white shadow-md'
-          : 'bg-white text-gray-400 border border-gray-200 hover:border-gray-400'"
-        :style="stationVisibility[d.station] ? { backgroundColor: d.color } : {}"
-        @click="toggleStation(d.station)"
-      >
-        <span
-          class="w-3 h-3 rounded-full border-2 transition-all"
-          :style="{ borderColor: stationVisibility[d.station] ? 'white' : d.color, backgroundColor: stationVisibility[d.station] ? 'white' : 'transparent' }"
-        />
-        {{ d.station }}
-        <span v-if="d.magnitude" class="text-xs opacity-75">(ML={{ d.magnitude.toFixed(1) }})</span>
-      </button>
     </div>
 
     <!-- Magnitude result display -->
@@ -476,84 +478,193 @@ onUnmounted(() => {
       </button>
     </div>
 
-    <!-- Chart -->
-    <div class="w-full max-w-250 mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
-      <div class="p-4 border-b border-gray-100 flex items-center gap-2">
-        <AppIcon name="zap" :size="20" class="text-red-500" />
-        <h2 class="text-lg font-bold text-igp-blue">Nomograma de Richter</h2>
+    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)] gap-5 mb-6">
+      <!-- Chart -->
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-gray-100 flex items-center gap-2">
+          <AppIcon name="zap" :size="20" class="text-red-500" />
+          <h2 class="text-lg font-bold text-igp-blue">Nomograma de Richter</h2>
+        </div>
+        <div class="p-2">
+          <canvas
+            ref="canvasRef"
+            class="w-full cursor-crosshair"
+            @click="onCanvasClick"
+          />
+        </div>
       </div>
-      <div class="p-2">
-        <canvas
-          ref="canvasRef"
-          class="w-full cursor-crosshair"
-          @click="onCanvasClick"
-        />
-      </div>
-    </div>
 
-    <!-- Station magnitude table -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
-      <div class="p-4 border-b border-gray-100 flex items-center gap-2">
-        <AppIcon name="file-text" :size="20" class="text-igp-sky-blue-600" />
-        <h2 class="text-lg font-bold text-igp-blue">Datos por estación</h2>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-4 py-3 text-left font-semibold text-gray-600">Estación</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-600">S-P (seg)</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-600">Distancia (km)</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-600">Amplitud (mm)</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-600">Magnitud (ML)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
+      <aside class="space-y-4">
+        <!-- Info box -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-gray-100 flex items-center gap-2">
+            <AppIcon name="info" :size="20" class="text-igp-sky-blue-600" />
+            <h3 class="text-base font-bold text-igp-blue">Uso del nomograma</h3>
+          </div>
+          <div class="p-4 text-xs sm:text-sm text-gray-600 space-y-2">
+            <p>Primero calcula el <strong>ML</strong> de cada estación con la fórmula.</p>
+            <p>Luego calcula el promedio y ubícalo con un clic sobre el eje central del nomograma.</p>
+          </div>
+        </div>
+
+        <!-- Station toggle buttons -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <h3 class="text-base font-bold text-igp-blue mb-3">Estaciones</h3>
+          <div class="flex flex-wrap gap-2">
+            <button
               v-for="d in stationData"
               :key="d.station"
-              class="border-t border-gray-50 hover:bg-gray-50 transition-colors"
-              :class="{ 'opacity-40': !stationVisibility[d.station] }"
+              class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-300 cursor-pointer"
+              :class="stationVisibility[d.station]
+                ? 'text-white shadow-md'
+                : 'bg-white text-gray-400 border border-gray-200 hover:border-gray-400'"
+              :style="stationVisibility[d.station] ? { backgroundColor: d.color } : {}"
+              @click="toggleStation(d.station)"
             >
-              <td class="px-4 py-3 font-bold" :style="{ color: d.color }">
-                <span class="inline-flex items-center gap-2">
-                  <span class="w-3 h-3 rounded-full inline-block" :style="{ backgroundColor: d.color }" />
-                  {{ d.station }}
-                </span>
-              </td>
-              <td class="px-4 py-3 font-mono font-semibold text-igp-blue">{{ d.deltaSP.toFixed(2) }}</td>
-              <td class="px-4 py-3 font-mono font-semibold text-igp-blue">{{ d.distance.toFixed(1) }}</td>
-              <td class="px-4 py-3 font-mono font-semibold text-igp-blue">{{ d.maxAmp.toFixed(3) }}</td>
-              <td class="px-4 py-3">
-                <span v-if="d.magnitude" class="font-mono font-bold text-red-600">{{ d.magnitude.toFixed(2) }}</span>
-                <span v-else class="text-gray-400">---</span>
-              </td>
-            </tr>
-            <tr v-if="avgMagnitude != null" class="border-t-2 border-gray-200 bg-gray-50">
-              <td class="px-4 py-3 font-bold text-igp-blue" colspan="4">Promedio</td>
-              <td class="px-4 py-3 font-mono font-bold text-red-600 text-lg">{{ avgMagnitude.toFixed(2) }} ML</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              <span
+                class="w-3 h-3 rounded-full border-2 transition-all"
+                :style="{ borderColor: stationVisibility[d.station] ? 'white' : d.color, backgroundColor: stationVisibility[d.station] ? 'white' : 'transparent' }"
+              />
+              {{ d.station }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Station magnitude table -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-gray-100 flex items-center gap-2">
+            <AppIcon name="file-text" :size="20" class="text-igp-sky-blue-600" />
+            <h2 class="text-base font-bold text-igp-blue">Datos por estación</h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">Est.</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">S-P</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">Amp.</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">ML</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="d in stationData"
+                  :key="d.station"
+                  class="border-t border-gray-50 hover:bg-gray-50 transition-colors"
+                  :class="{ 'opacity-40': !stationVisibility[d.station] }"
+                >
+                  <td class="px-3 py-2 font-bold" :style="{ color: d.color }">{{ d.station }}</td>
+                  <td class="px-3 py-2 font-mono font-semibold text-igp-blue">{{ d.deltaSP.toFixed(2) }}</td>
+                  <td class="px-3 py-2 font-mono font-semibold text-igp-blue">{{ d.maxAmp.toFixed(2) }}</td>
+                  <td class="px-3 py-2">
+                    <span v-if="stationMagnitudeResults[d.station] != null" class="font-mono font-medium text-red-600">
+                      {{ stationMagnitudeResults[d.station].toFixed(2) }}
+                    </span>
+                    <button
+                      v-else
+                      class="rounded-lg bg-igp-sky-blue-50 px-3 py-1 text-[11px] font-semibold text-igp-sky-blue-700 hover:bg-igp-sky-blue-100 transition-colors cursor-pointer"
+                      @click="openMagnitudeCalculation(d.station)"
+                    >
+                      Calcular
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="avgMagnitude != null" class="border-t-2 border-gray-200 bg-gray-50">
+                  <td class="px-3 py-2 font-bold text-igp-blue" colspan="3">Promedio</td>
+                  <td class="px-3 py-2 font-mono font-medium text-red-600">{{ avgMagnitude.toFixed(2) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="p-3 border-t border-gray-100">
+            <button
+              class="w-full rounded-xl px-4 py-2 text-xs font-semibold transition-colors"
+              :class="allStationMagnitudesCalculated ? 'bg-igp-blue text-white hover:bg-igp-blue-800 cursor-pointer' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
+              :disabled="!allStationMagnitudesCalculated"
+              @click="calculateAverageMagnitude"
+            >
+              Calcular promedio
+            </button>
+            <p v-if="avgMagnitude != null" class="mt-2 text-xs font-semibold text-igp-blue">
+              Ubica en el nomograma de Richter el promedio: haz clic en el eje central.
+            </p>
+          </div>
+        </div>
+
+        <!-- Formula -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-gray-100 flex items-center gap-2">
+            <AppIcon name="info" :size="20" class="text-igp-sky-blue-600" />
+            <h3 class="text-base font-bold text-igp-blue">Fórmula de Richter</h3>
+          </div>
+          <div class="p-4">
+            <div class="rounded-xl border border-gray-100 bg-gray-50 p-3 text-center">
+              <p class="text-sm font-mono font-semibold text-gray-800">
+                ML = log₁₀(A) + 3×log₁₀(8×Δt<sub>S-P</sub>) − 2.92
+              </p>
+              <p class="text-xs text-gray-500 mt-2">
+                A = Amplitud máxima (mm) | Δt<sub>S-P</sub> = S - P (seg)
+              </p>
+            </div>
+            <p class="mt-3 text-xs text-gray-400">Fuente: Instituto Nacional de Prevención Sísmica (INPRES)</p>
+          </div>
+        </div>
+      </aside>
     </div>
 
-    <!-- Formula -->
-    <div class="bg-igp-blue rounded-2xl p-4 sm:p-6 text-white mb-8">
-      <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
-        <AppIcon name="info" :size="20" class="text-igp-sky-blue-300" />
-        Fórmula de Richter
-      </h3>
-      <div class="bg-white/10 rounded-xl p-4 text-center">
-        <p class="text-lg font-mono font-semibold">
-          ML = log₁₀(A) + 3×log₁₀(8×Δt<sub>S-P</sub>) − 2.92
-        </p>
-        <p class="text-sm text-gray-300 mt-2">
-          A = Amplitud máxima (mm) | Δt<sub>S-P</sub> = Diferencia de tiempo S - P (seg)
-        </p>
-      </div>
-      <div class="mt-3 text-xs text-white/60">
-        <p>Fuente: Instituto Nacional de Prevención Sísmica (INPRES)</p>
+    <!-- Magnitude calculation modal -->
+    <div
+      v-if="showMagnitudeCalculationModal && selectedCalculationRow"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4"
+      @click.self="closeMagnitudeCalculation"
+    >
+      <div class="w-full max-w-2xl rounded-2xl bg-white shadow-2xl overflow-hidden">
+        <div class="flex items-start justify-between gap-4 border-b border-gray-100 p-5">
+          <div>
+            <h3 class="text-lg font-bold text-igp-blue flex items-center gap-2">
+              <AppIcon name="calculator" :size="20" class="text-igp-sky-blue-600" />
+              Calcular ML
+            </h3>
+            <p class="mt-1 text-sm text-gray-500">Estación {{ selectedCalculationRow.station }}</p>
+          </div>
+          <button
+            class="p-2 rounded-lg text-gray-400 hover:text-igp-blue hover:bg-gray-100 transition-colors cursor-pointer"
+            @click="closeMagnitudeCalculation"
+            title="Cerrar"
+          >
+            <AppIcon name="x" :size="18" />
+          </button>
+        </div>
+        <div class="p-5 space-y-3">
+          <div class="rounded-xl border border-gray-100 bg-gray-50 p-4">
+            <p class="text-sm font-mono font-semibold text-gray-800 text-center">
+              ML = log₁₀(A) + 3×log₁₀(8×Δt<sub>S-P</sub>) − 2.92
+            </p>
+          </div>
+          <div class="rounded-xl border border-gray-100 bg-white p-4 space-y-2 text-sm text-gray-700">
+            <p>Reemplazar:</p>
+            <p class="font-mono text-igp-blue">
+              ML = log₁₀({{ selectedCalculationRow.maxAmp.toFixed(3) }}) + 3×log₁₀(8×{{ selectedCalculationRow.deltaSP.toFixed(2) }}) − 2.92
+            </p>
+            <p class="font-semibold text-red-600">
+              ML = {{ selectedCalculationRow.magnitude.toFixed(2) }}
+            </p>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+              @click="closeMagnitudeCalculation"
+            >
+              Cancelar
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-semibold bg-igp-blue text-white hover:bg-igp-blue-800 transition-colors cursor-pointer"
+              @click="registerStationMagnitude"
+            >
+              Registrar ML
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -563,8 +674,9 @@ onUnmounted(() => {
         <AppIcon name="arrow-left" :size="16" class="mr-1" />
         Anterior
       </AppButton>
-      <AppButton variant="primary" size="md" @click="goNext">
-        Ver Reporte Sísmico
+      <AppButton variant="primary" size="md" :disabled="selectedMagnitude == null" @click="goNext"
+        :class="{ 'opacity-50 cursor-not-allowed': selectedMagnitude == null }">
+        Ver resultado final
         <AppIcon name="arrow-right" :size="16" class="ml-1" />
       </AppButton>
     </div>

@@ -281,7 +281,9 @@ function goBack() {
 }
 
 function goNext() {
-  store.nextStep()
+  if (epicenterPlaced.value && store.userEpicenter) {
+    store.nextStep()
+  }
 }
 
 onMounted(async () => {
@@ -308,7 +310,7 @@ onUnmounted(() => {
     <div class="mb-6 flex items-start justify-between flex-wrap gap-4">
       <div>
         <span class="inline-block px-3 py-1 bg-igp-blue-50 text-igp-blue text-xs font-bold uppercase tracking-wider rounded-full mb-3">
-          Paso 6
+          Paso 4
         </span>
         <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
           Localización del Epicentro
@@ -322,7 +324,8 @@ onUnmounted(() => {
           <AppIcon name="arrow-left" :size="16" class="mr-1" />
           Atrás
         </AppButton>
-        <AppButton variant="primary" size="sm" @click="goNext">
+        <AppButton variant="primary" size="sm" :disabled="!epicenterPlaced" @click="goNext"
+          :class="{ 'opacity-50 cursor-not-allowed': !epicenterPlaced }">
           Siguiente
           <AppIcon name="arrow-right" :size="16" class="ml-1" />
         </AppButton>
@@ -392,91 +395,105 @@ onUnmounted(() => {
       <div id="epicenter-map" class="w-full" style="height: 400px; min-height: 300px" />
     </div>
 
-    <!-- Station info table -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
-      <div class="p-4 border-b border-gray-100 flex items-center gap-2">
-        <AppIcon name="map-pin" :size="20" class="text-igp-sky-blue-600" />
-        <h2 class="text-lg font-bold text-igp-blue">Estaciones y distancias</h2>
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6 items-start">
+      <!-- Station info table -->
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+          <AppIcon name="map-pin" :size="20" class="text-igp-sky-blue-600" />
+          <h2 class="text-lg font-bold text-igp-blue">Estaciones y distancias</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs xl:text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-3 py-2.5 text-left font-semibold text-gray-600">Estación</th>
+                <th class="px-3 py-2.5 text-left font-semibold text-gray-600">Nombre</th>
+                <th class="px-3 py-2.5 text-left font-semibold text-gray-600">Lat.</th>
+                <th class="px-3 py-2.5 text-left font-semibold text-gray-600">Lng.</th>
+                <th class="px-3 py-2.5 text-left font-semibold text-gray-600">Km</th>
+                <th class="px-3 py-2.5 text-left font-semibold text-gray-600">Visible</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="sd in stationDistances"
+                :key="sd.station"
+                class="border-t border-gray-50 hover:bg-gray-50 transition-colors"
+                :class="{ 'opacity-40': !stationCircleVisibility[sd.station] }"
+              >
+                <td class="px-3 py-2.5 font-bold" :style="{ color: sd.color }">
+                  <span class="inline-flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full inline-block" :style="{ backgroundColor: sd.color }" />
+                    {{ sd.station }}
+                  </span>
+                </td>
+                <td class="px-3 py-2.5 text-gray-600">{{ sd.name }}</td>
+                <td class="px-3 py-2.5 font-mono">{{ sd.lat.toFixed(4) }}°</td>
+                <td class="px-3 py-2.5 font-mono">{{ sd.lng.toFixed(4) }}°</td>
+                <td class="px-3 py-2.5">
+                  <span class="font-mono font-semibold text-igp-blue">{{ sd.distance.toFixed(1) }}</span>
+                </td>
+                <td class="px-3 py-2.5">
+                  <button
+                    class="w-8 h-5 rounded-full transition-all cursor-pointer relative"
+                    :class="stationCircleVisibility[sd.station] ? 'bg-igp-green-700' : 'bg-gray-300'"
+                    @click="toggleStationCircle(sd.station)"
+                  >
+                    <span
+                      class="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all"
+                      :class="stationCircleVisibility[sd.station] ? 'left-3.5' : 'left-0.5'"
+                    />
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-4 py-3 text-left font-semibold text-gray-600">Estación</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-600">Nombre</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-600">Latitud</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-600">Longitud</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-600">Distancia (km)</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-600">Visible</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="sd in stationDistances"
-              :key="sd.station"
-              class="border-t border-gray-50 hover:bg-gray-50 transition-colors"
-              :class="{ 'opacity-40': !stationCircleVisibility[sd.station] }"
-            >
-              <td class="px-4 py-3 font-bold" :style="{ color: sd.color }">
-                <span class="inline-flex items-center gap-2">
-                  <span class="w-3 h-3 rounded-full inline-block" :style="{ backgroundColor: sd.color }" />
-                  {{ sd.station }}
-                </span>
-              </td>
-              <td class="px-4 py-3 text-gray-600">{{ sd.name }}</td>
-              <td class="px-4 py-3 font-mono text-sm">{{ sd.lat.toFixed(4) }}°</td>
-              <td class="px-4 py-3 font-mono text-sm">{{ sd.lng.toFixed(4) }}°</td>
-              <td class="px-4 py-3">
-                <span class="font-mono font-semibold text-igp-blue">{{ sd.distance.toFixed(1) }}</span>
-              </td>
-              <td class="px-4 py-3">
-                <button
-                  class="w-8 h-5 rounded-full transition-all cursor-pointer relative"
-                  :class="stationCircleVisibility[sd.station] ? 'bg-igp-green-700' : 'bg-gray-300'"
-                  @click="toggleStationCircle(sd.station)"
-                >
-                  <span
-                    class="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all"
-                    :class="stationCircleVisibility[sd.station] ? 'left-3.5' : 'left-0.5'"
-                  />
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
 
-    <!-- Seismic Info -->
-    <div class="bg-igp-blue rounded-2xl p-4 sm:p-6 text-white mb-8">
-      <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-        <AppIcon name="target" :size="20" class="text-igp-sky-blue-300" />
-        Información del Sismo
-      </h3>
-      <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        <div class="bg-white/10 rounded-xl p-3">
-          <p class="text-xs text-gray-300 mb-1">Magnitud</p>
-          <p class="text-lg font-bold text-gray-400 italic">Siguiente paso</p>
+      <!-- Seismic Info -->
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-3">
+          <h3 class="text-lg font-bold text-igp-blue flex items-center gap-2">
+            <AppIcon name="target" :size="20" class="text-igp-sky-blue-600" />
+            Información del Sismo
+          </h3>
+          <span class="px-3 py-1 rounded-full bg-igp-blue-50 text-igp-blue text-xs font-semibold">
+            {{ store.userEpicenter ? 'Epicentro ubicado' : 'Pendiente de epicentro' }}
+          </span>
         </div>
-        <div class="bg-white/10 rounded-xl p-3">
-          <p class="text-xs text-gray-300 mb-1">Profundidad</p>
-          <p class="text-lg font-bold">{{ selectedRecord?.info?.profundidad || '---' }}</p>
-        </div>
-        <div class="bg-white/10 rounded-xl p-3">
-          <p class="text-xs text-gray-300 mb-1">Latitud</p>
-          <p class="text-lg font-bold">{{ store.userEpicenter ? store.userEpicenter.lat.toFixed(4) + '°' : '---' }}</p>
-        </div>
-        <div class="bg-white/10 rounded-xl p-3">
-          <p class="text-xs text-gray-300 mb-1">Longitud</p>
-          <p class="text-lg font-bold">{{ store.userEpicenter ? store.userEpicenter.lng.toFixed(4) + '°' : '---' }}</p>
-        </div>
-        <div class="bg-white/10 rounded-xl p-3 col-span-2">
-          <p class="text-xs text-gray-300 mb-1">Referencia</p>
-          <p class="text-sm font-semibold">{{ selectedRecord?.info?.referencia || '---' }}</p>
-        </div>
-        <div class="bg-white/10 rounded-xl p-3 col-span-2">
-          <p class="text-xs text-gray-300 mb-1">Observaciones</p>
-          <p class="text-sm">{{ selectedRecord?.info?.observaciones || '---' }}</p>
+        <div class="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div class="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5">
+            <p class="text-xs font-semibold text-gray-500 mb-1">Magnitud</p>
+            <p class="text-sm font-bold text-gray-400 italic">Siguiente paso</p>
+          </div>
+          <div class="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5">
+            <p class="text-xs font-semibold text-gray-500 mb-1">Profundidad</p>
+            <p class="text-base font-bold text-gray-800">{{ selectedRecord?.info?.profundidad || '---' }}</p>
+          </div>
+          <div class="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5 sm:col-span-2">
+            <p class="text-xs font-semibold text-gray-500 mb-1.5">Coordenadas</p>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-0.5">Latitud</p>
+                <p class="text-base font-bold" :class="store.userEpicenter ? 'text-gray-800' : 'text-gray-400'">
+                  {{ store.userEpicenter ? store.userEpicenter.lat.toFixed(4) + '°' : '---' }}
+                </p>
+              </div>
+              <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-0.5">Longitud</p>
+                <p class="text-base font-bold" :class="store.userEpicenter ? 'text-gray-800' : 'text-gray-400'">
+                  {{ store.userEpicenter ? store.userEpicenter.lng.toFixed(4) + '°' : '---' }}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5 sm:col-span-2">
+            <p class="text-xs font-semibold text-gray-500 mb-1">Referencia</p>
+            <p class="text-sm leading-snug font-semibold" :class="store.userEpicenter ? 'text-gray-800' : 'text-gray-400'">
+              {{ store.userEpicenter ? (selectedRecord?.info?.referencia || '---') : '---' }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -487,7 +504,8 @@ onUnmounted(() => {
         <AppIcon name="arrow-left" :size="16" class="mr-1" />
         Anterior
       </AppButton>
-      <AppButton variant="primary" size="md" @click="goNext">
+      <AppButton variant="primary" size="md" :disabled="!epicenterPlaced" @click="goNext"
+        :class="{ 'opacity-50 cursor-not-allowed': !epicenterPlaced }">
         Hallar Magnitud
         <AppIcon name="arrow-right" :size="16" class="ml-1" />
       </AppButton>

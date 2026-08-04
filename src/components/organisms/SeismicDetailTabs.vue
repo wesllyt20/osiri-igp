@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted, nextTick, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import AppIcon from '@/components/atoms/AppIcon.vue'
 import ImageLightbox from '@/components/atoms/ImageLightbox.vue'
 import { STATIONS_CATALOG, SEISMIC_RECORDS } from '@/data/seismicData'
@@ -9,6 +10,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['next-step', 'select-record'])
+const router = useRouter()
+const reportNotes = ref('')
 
 // ─────────────────────────────────────────
 // EMPTY STATE — Slideshow de preview cards
@@ -355,6 +358,10 @@ const sacImages = computed(() => {
 function handleNextStep() {
   emit('next-step')
 }
+
+function openGuide() {
+  router.push('/guia')
+}
 </script>
 
 <template>
@@ -365,139 +372,105 @@ function handleNextStep() {
     <div class="flex-1 overflow-y-auto">
       <div class="detail-layout bg-white">
 
-      <!-- 1. MAPA centrado en las estaciones -->
-      <div class="detail-map relative bg-gray-200 min-h-[320px] lg:min-h-0">
-        <div id="seismic-detail-map" class="absolute inset-0 z-0" />
-        <div class="absolute top-3 left-3 z-[400] pointer-events-none">
-          <span
-            class="inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm text-igp-dark-blue text-xs font-bold px-3 py-1.5 rounded-full shadow-md border border-white/60"
-          >
-            <AppIcon name="activity" :size="12" />
-            {{ record.title }}
-          </span>
-        </div>
-      </div>
-
-      <div class="detail-information p-4 space-y-6">
-
-        <!-- 2. DATOS DEL EVENTO -->
-        <section>
-          <h3 class="text-base font-medium text-gray-800 mb-4 flex items-center gap-2">
-            <span class="text-igp-dark-blue text-lg">1.</span>
-            Datos del evento:
-          </h3>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div
-              v-for="item in eventInfoItems"
-              :key="item.label"
-              class="bg-white rounded-xl border border-slate-200 p-3 flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow duration-200"
-            >
-              <div
-                class="w-11 h-11 flex items-center justify-center shrink-0 text-black"
-              >
-                <svg
-                  :viewBox="item.icon.viewBox"
-                  class="w-8 h-8 flex-none"
-                  :style="item.iconRotate ? { transform: 'rotate(' + item.iconRotate + 'deg)' } : null"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path
-                    v-for="path in item.icon.paths"
-                    :key="path.d"
-                    :d="path.d"
-                    :fill="path.fill || 'none'"
-                    :stroke="path.stroke || 'none'"
-                    :stroke-width="path.strokeWidth"
-                  />
-                </svg>
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-[10px] font-semibold text-gray-600 leading-snug uppercase tracking-wide">
-                  {{ item.label }}
-                  <span
-                    v-if="item.badge"
-                    class="ml-1 text-[9px] font-black text-igp-blue normal-case tracking-normal px-1.5 py-0.5 rounded-full"
-                    style="background: rgba(0, 100, 255, 0.1)"
-                  >{{ item.badge }}</span>
-                </p>
-                <p class="text-sm font-medium text-gray-700 mt-1 leading-snug">{{ item.value }}</p>
-              </div>
-            </div>
+        <!-- 1. MAPA centrado en las estaciones -->
+        <div class="detail-map relative bg-gray-200 min-h-[320px] lg:min-h-0">
+          <div id="seismic-detail-map" class="absolute inset-0 z-0" />
+          <div class="absolute top-3 left-3 z-[400] pointer-events-none">
+            <span
+              class="inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm text-igp-dark-blue text-xs font-bold px-3 py-1.5 rounded-full shadow-md border border-white/60">
+              <AppIcon name="activity" :size="12" />
+              {{ record.title }}
+            </span>
           </div>
-        </section>
+        </div>
 
-        <!-- 3. FORMAS DE ONDA (graficas_formato_mm.SAC) -->
-        <section>
-          <h3 class="text-base font-medium text-gray-800 mb-4 flex items-center gap-2">
-            <AppIcon name="activity" :size="18" class="text-igp-dark-blue" />
-            Formas de Onda &mdash; mm.SAC
-          </h3>
+        <div class="detail-information p-4 space-y-6">
 
-          <div
-            class="grid grid-cols-2 gap-3"
-            :class="sacImages.length > 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-2'"
-          >
-            <button
-              v-for="(img, idx) in sacImages"
-              :key="img.station"
-              class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-lg hover:border-igp-sky-blue-300 transition-all duration-200 group cursor-zoom-in text-left animate-fadeSlideIn"
-              :style="{ animationDelay: idx * 60 + 'ms' }"
-              @click="openModal(img.url, record.title + ' — ' + img.station + ' (' + img.name + ')')"
-            >
-              <div class="flex items-center gap-2 px-3 py-2 bg-gray-50 border-b border-gray-100">
-                <AppIcon name="activity" :size="13" class="text-igp-dark-blue shrink-0" />
-                <span class="text-xs font-medium text-igp-dark-blue">{{ img.station }}</span>
-                <span class="text-[10px] text-gray-400 truncate">{{ img.name }}</span>
-              </div>
+          <!-- 2. DATOS DEL EVENTO -->
+          <section>
+            <h3 class="font-medium text-gray-800 mb-4 flex items-center gap-2">
+              <span class="text-igp-dark-blue ">1.</span>
+              Datos del evento:
+            </h3>
 
-              <div class="relative overflow-hidden bg-gray-50">
-                <img
-                  :src="img.url"
-                  :alt="'Onda sismica ' + img.station"
-                  class="w-full object-contain group-hover:scale-[1.03] transition-transform duration-300"
-                  style="max-height: 170px; min-height: 110px"
-                  loading="lazy"
-                />
-                <div class="absolute inset-0 flex items-center justify-center">
-                  <div
-                    class="bg-white text-igp-dark-blue text-xs font-bold px-3 py-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5"
-                  >
-                    <AppIcon name="eye" :size="13" />
-                    Ver ampliado
-                  </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div v-for="item in eventInfoItems" :key="item.label"
+                class="bg-white rounded-xl  p-1 flex items-start gap-3   transition-shadow duration-200">
+                <div class="w-9 h-9 flex items-center justify-center shrink-0 text-black">
+                  <svg :viewBox="item.icon.viewBox" class="w-8 h-8 flex-none"
+                    :style="item.iconRotate ? { transform: 'rotate(' + item.iconRotate + 'deg)' } : null" fill="none"
+                    xmlns="http://www.w3.org/2000/svg" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <path v-for="path in item.icon.paths" :key="path.d" :d="path.d" :fill="path.fill || 'none'"
+                      :stroke="path.stroke || 'none'" :stroke-width="path.strokeWidth" />
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-xs font-semibold text-igp-black-950 leading-snug  tracking-wide">
+                    {{ item.label }}
+                    <span v-if="item.badge"
+                      class="ml-1 text-xl font-semibold text-igp-blue normal-case tracking-normal px-1.5 py-0.5 rounded-full"
+                      style="background: rgba(0, 100, 255, 0.1)">{{ item.badge }}</span>
+                  </p>
+                  <p class="text-sm text-gray-700 mt-1 leading-snug">{{ item.value }}</p>
                 </div>
               </div>
-            </button>
-          </div>
-        </section>
+            </div>
+          </section>
 
-      </div>
+          <!-- 3. FORMAS DE ONDA (graficas_formato_mm.SAC) -->
+          <section>
+            <h3 class="text-base font-medium text-gray-800 mb-4 flex items-center gap-2">
+              2. Registro de estaciones sísmicas
+            </h3>
+
+            <div class="grid grid-cols-2 gap-3" :class="sacImages.length > 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-2'">
+              <button v-for="(img, idx) in sacImages" :key="img.station"
+                class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-lg hover:border-igp-sky-blue-300 transition-all duration-200 group cursor-zoom-in text-left animate-fadeSlideIn"
+                :style="{ animationDelay: idx * 60 + 'ms' }"
+                @click="openModal(img.url, record.title + ' — ' + img.station + ' (' + img.name + ')')">
+                <div class="flex items-center gap-2 px-3 py-2 bg-gray-50 border-b border-gray-100">
+                  <AppIcon name="activity" :size="13" class="text-igp-dark-blue shrink-0" />
+                  <span class="text-xs font-medium text-igp-dark-blue">{{ img.station }}</span>
+                  <span class="text-[10px] text-gray-400 truncate">{{ img.name }}</span>
+                </div>
+
+                <div class="relative overflow-hidden bg-gray-50">
+                  <img :src="img.url" :alt="'Onda sismica ' + img.station"
+                    class="w-full object-contain group-hover:scale-[1.03] transition-transform duration-300"
+                    style="max-height: 170px; min-height: 110px" loading="lazy" />
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <div
+                      class="bg-white text-igp-dark-blue text-xs font-bold px-3 py-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5">
+                      <AppIcon name="eye" :size="13" />
+                      Ver ampliado
+                    </div>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </section>
+
+        </div>
       </div>
     </div>
 
-    <!-- Boton Siguiente (sticky) -->
-    <div class="shrink-0 px-5 py-3 bg-white border-t border-gray-200 flex justify-end">
-      <button
-        class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white text-[#1a7a3c] border border-[#1a7a3c] font-bold text-sm shadow-sm transition-all duration-200 cursor-pointer active:scale-95 hover:bg-[#1a7a3c] hover:text-white hover:shadow-md"
-        @click="handleNextStep"
-      >
-        Siguiente paso
-        <AppIcon name="arrow-right" :size="16" />
+    <!-- Acciones inferiores -->
+    <div class="report-action-bar shrink-0">
+      <button class="report-action-btn report-action-btn--guide" type="button" @click="openGuide">
+        <AppIcon name="book-open" :size="13" />
+        Consultar guia
       </button>
+      <button class="report-action-btn report-action-btn--save" type="button" @click="handleNextStep">
+        <AppIcon name="save" :size="13" />
+        Guardar reporte
+      </button>
+      <input v-model="reportNotes" class="report-notes-input" type="text" placeholder="Ingresa tus anotaciones aqui."
+        aria-label="Anotaciones del reporte" />
     </div>
 
     <!-- Modal de imagen ampliada -->
-    <ImageLightbox
-      v-if="modalSrc"
-      :src="modalSrc"
-      :alt="modalAlt"
-      @close="modalSrc = null"
-    />
+    <ImageLightbox v-if="modalSrc" :src="modalSrc" :alt="modalAlt" @close="modalSrc = null" />
   </div>
 
   <!-- ESTADO VACIO: pantalla de seleccion de sismo -->
@@ -508,8 +481,7 @@ function handleNextStep() {
       <div class="mb-8 text-center animate-fadeSlideIn">
         <div
           class="inline-flex items-center gap-2 px-3 py-1.5 text-igp-blue text-xs font-bold uppercase tracking-wider rounded-full mb-4"
-          style="background: rgba(0, 40, 120, 0.08)"
-        >
+          style="background: rgba(0, 40, 120, 0.08)">
           <AppIcon name="activity" :size="14" />
           <span class="font-medium">Sistema de Reportes</span>
         </div>
@@ -522,56 +494,36 @@ function handleNextStep() {
 
       <!-- 6 Preview cards (Sismo A-F) con hover slideshow -->
       <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full mb-8">
-        <button
-          v-for="(rec, cardIdx) in previewRecords"
-          :key="rec.id"
+        <button v-for="(rec, cardIdx) in previewRecords" :key="rec.id"
           class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 text-left group cursor-pointer animate-fadeSlideIn card-preview"
-          :style="{ animationDelay: cardIdx * 80 + 'ms' }"
-          @mouseenter="startSlideshow(rec)"
-          @mouseleave="stopSlideshow(rec.id)"
-          @click="$emit('select-record', rec)"
-        >
+          :style="{ animationDelay: cardIdx * 80 + 'ms' }" @mouseenter="startSlideshow(rec)"
+          @mouseleave="stopSlideshow(rec.id)" @click="$emit('select-record', rec)">
           <!-- Area de imagen con slideshow -->
           <div class="relative overflow-hidden bg-gray-100" style="height: 180px">
-            <img
-              v-for="(img, imgIdx) in getSlideshowImages(rec)"
-              :key="imgIdx"
-              :src="img.url"
-              :alt="rec.title"
+            <img v-for="(img, imgIdx) in getSlideshowImages(rec)" :key="imgIdx" :src="img.url" :alt="rec.title"
               class="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-              :class="imgIdx === currentSlideIdx(rec.id) ? 'opacity-100' : 'opacity-0'"
-              loading="lazy"
-              @error="(e) => { if (img.fallback) e.target.src = img.fallback }"
-            />
+              :class="imgIdx === currentSlideIdx(rec.id) ? 'opacity-100' : 'opacity-0'" loading="lazy"
+              @error="(e) => { if (img.fallback) e.target.src = img.fallback }" />
 
             <!-- Gradiente inferior -->
-            <div
-              class="absolute inset-0 pointer-events-none"
-              style="background: linear-gradient(to top, rgba(0,0,0,0.55), transparent 60%)"
-            />
+            <div class="absolute inset-0 pointer-events-none"
+              style="background: linear-gradient(to top, rgba(0,0,0,0.55), transparent 60%)" />
 
             <!-- Indicadores de diapositiva -->
             <div class="absolute bottom-2.5 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
-              <span
-                v-for="(_, dotIdx) in getSlideshowImages(rec)"
-                :key="dotIdx"
-                class="rounded-full transition-all duration-300"
-                :style="{
+              <span v-for="(_, dotIdx) in getSlideshowImages(rec)" :key="dotIdx"
+                class="rounded-full transition-all duration-300" :style="{
                   width: dotIdx === currentSlideIdx(rec.id) ? '14px' : '6px',
                   height: '6px',
                   background: dotIdx === currentSlideIdx(rec.id) ? 'white' : 'rgba(255,255,255,0.4)',
-                }"
-              />
+                }" />
             </div>
 
             <!-- Badge Auto (hover) -->
             <div
-              class="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
-            >
-              <span
-                class="text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
-                style="background: rgba(0,0,0,0.55)"
-              >
+              class="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+              <span class="text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
+                style="background: rgba(0,0,0,0.55)">
                 <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
                 Auto
               </span>
@@ -580,7 +532,8 @@ function handleNextStep() {
 
           <!-- Info del card -->
           <div class="px-4 py-3">
-            <p class="text-sm font-extrabold text-igp-dark-blue group-hover:text-igp-blue transition-colors leading-snug">
+            <p
+              class="text-sm font-extrabold text-igp-dark-blue group-hover:text-igp-blue transition-colors leading-snug">
               {{ rec.title }}
             </p>
             <p class="text-xs text-gray-600 mt-0.5 truncate">{{ rec.subtitle }}</p>
@@ -590,10 +543,7 @@ function handleNextStep() {
       </div>
 
       <!-- Iconos de caracteristicas -->
-      <div
-        class="grid grid-cols-3 gap-3 w-full max-w-lg mb-7 animate-fadeSlideIn"
-        style="animation-delay: 550ms"
-      >
+      <div class="grid grid-cols-3 gap-3 w-full max-w-lg mb-7 animate-fadeSlideIn" style="animation-delay: 550ms">
         <div class="text-center p-4 bg-white rounded-xl border border-gray-200 ">
           <AppIcon name="map-pin" :size="24" class="text-igpblack mx-auto mb-1.5" />
           <p class="text-[11px] font-semibold text-gray-600">Estaciones</p>
@@ -609,19 +559,10 @@ function handleNextStep() {
       </div>
 
       <!-- CTA desktop -->
-      <div
-        class="hidden lg:flex items-center gap-3 px-6 py-3.5 rounded-2xl animate-fadeSlideIn"
-        style="background: rgba(0,40,120,0.05); animation-delay: 650ms"
-      >
-        <svg
-          class="w-7 h-7 text-igp-black animate-bounce-left shrink-0"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
+      <div class="hidden lg:flex items-center gap-3 px-6 py-3.5 rounded-2xl animate-fadeSlideIn"
+        style="background: rgba(0,40,120,0.05); animation-delay: 650ms">
+        <svg class="w-7 h-7 text-igp-black animate-bounce-left shrink-0" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="19" y1="12" x2="5" y2="12" />
           <polyline points="12 19 5 12 12 5" />
         </svg>
@@ -641,6 +582,95 @@ function handleNextStep() {
   min-height: 100%;
 }
 
+.detail-map {
+  margin: 16px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+:deep(.detail-map .leaflet-container) {
+  border-radius: inherit;
+}
+
+.report-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #eef3f5;
+  border-top: 1px solid #d9e3e8;
+}
+
+.report-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.report-action-btn:hover {
+  filter: brightness(1.06);
+}
+
+.report-action-btn:active {
+  transform: scale(0.98);
+}
+
+.report-action-btn--guide {
+  background: #17495f;
+}
+
+.report-action-btn--save {
+  background: #d76632;
+}
+
+.report-notes-input {
+  min-width: 0;
+  flex: 1;
+  min-height: 34px;
+  border: 1px solid #b9c4ca;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0 14px;
+  color: #334155;
+  font-size: 11px;
+  outline: none;
+}
+
+.report-notes-input::placeholder {
+  color: #667985;
+}
+
+.report-notes-input:focus {
+  border-color: #17495f;
+  box-shadow: 0 0 0 2px rgba(23, 73, 95, 0.14);
+}
+
+@media (max-width: 640px) {
+  .report-action-bar {
+    flex-wrap: wrap;
+  }
+
+  .report-action-btn {
+    flex: 1 1 calc(50% - 6px);
+  }
+
+  .report-notes-input {
+    flex-basis: 100%;
+  }
+}
+
 @media (min-width: 992px) {
   .detail-layout {
     grid-template-columns: minmax(430px, 0.9fr) minmax(500px, 1.15fr);
@@ -655,25 +685,41 @@ function handleNextStep() {
   .detail-map {
     grid-column: 2;
     grid-row: 1;
-    height: 100%;
-    min-height: 650px;
+    height: calc(100% - 32px);
+    min-height: 620px;
     position: sticky;
-    top: 0;
+    top: 16px;
   }
 }
 
 @keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 .animate-fadeSlideIn {
   animation: fadeSlideIn 0.4s ease-out both;
 }
 
 @keyframes bounceLeft {
-  0%, 100% { transform: translateX(0); }
-  50%       { transform: translateX(-5px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(-5px);
+  }
 }
+
 .animate-bounce-left {
   animation: bounceLeft 1.6s ease-in-out infinite;
 }
@@ -715,10 +761,12 @@ function handleNextStep() {
     opacity: 0.58;
     transform: translate(-50%, -50%) scale(0.45);
   }
+
   75% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(1.45);
   }
+
   100% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(1.45);
@@ -726,18 +774,24 @@ function handleNextStep() {
 }
 
 @keyframes stationHeartbeat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(-50%, -50%) scale(0.9);
   }
+
   18% {
     transform: translate(-50%, -50%) scale(1.13);
   }
+
   34% {
     transform: translate(-50%, -50%) scale(0.96);
   }
+
   52% {
     transform: translate(-50%, -50%) scale(1.08);
   }
+
   70% {
     transform: translate(-50%, -50%) scale(0.92);
   }
@@ -747,6 +801,7 @@ function handleNextStep() {
   border: 2px solid rgb(226, 232, 240);
   transition: border-color 0.3s, box-shadow 0.3s;
 }
+
 .card-preview:hover {
   border-color: rgb(99, 160, 255);
 }

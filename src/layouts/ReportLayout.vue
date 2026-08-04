@@ -18,7 +18,7 @@ watch(() => store.currentStep, () => nextTick(() => {
 
 watch(() => store.selectedRecordId, (id) => {
   selectedQuake.value = id ? records.value.find((record) => record.id === id) || null : null
-})
+}, { immediate: true })
 
 function selectQuake(record) {
   selectedQuake.value = record
@@ -52,26 +52,26 @@ function handleNextStep() {
   <div class="h-screen min-h-screen flex flex-col overflow-hidden bg-[#eaf4f8] border-l-[6px] border-[#4d879b]">
     <AppHeader />
 
-    <div class="flex-1 min-h-0 p-3 lg:p-4">
-      <section class="h-full flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div class="shrink-0 border-b border-slate-200 bg-white px-4 py-3">
-          <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <div class="lg:w-56 shrink-0">
-              <h1 class="text-xl font-semibold text-igp-blue">Creando tu reporte sísmico IGP</h1>
-              <p class="text-[10px] text-slate-600">Completa correctamente los siguientes pasos.</p>
+    <div class="flex-1 min-h-0 p-1 lg:p-2">
+      <section class="h-full flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="shrink-0 border-b border-slate-200 bg-white px-3 py-2">
+          <div class="flex flex-col gap-2 lg:flex-row lg:items-center">
+            <div class="lg:w-68 xl:w-86 shrink-0">
+              <h1 class="font-semibold leading-tight text-igp-blue text-base sm:text-xl">Creando tu reporte sísmico IGP</h1>
+              <p class="mt-0.5 text-xs leading-tight text-igp-black-950">Completa correctamente los siguientes pasos.</p>
             </div>
 
-            <nav class="flex-1 flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0" aria-label="Progreso del reporte">
+            <nav class="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto py-2 sm:py-4" aria-label="Progreso del reporte">
               <template v-for="(step, index) in steps" :key="step.id">
-                <div class="step-pill shrink-0 flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-semibold transition-colors"
-                  :class="currentStep === step.id ? 'bg-igp-blue text-white' : store.isCompleted(step.id) ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'">
-                  <span class="flex h-4 w-4 items-center justify-center rounded-full bg-white/80 text-[9px]"
-                    :class="currentStep === step.id || store.isCompleted(step.id) ? 'text-igp-blue' : 'text-slate-500'">
+                <div class="step-pill shrink-0 flex items-center gap-1.5 rounded-full px-2.5 py-2.5 text-xs sm:text-sm font-semibold transition-colors sm:px-4"
+                  :class="currentStep === step.id ? 'bg-igp-blue text-white' : store.isCompleted(step.id) ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-white'">
+                  <span class="flex h-5 w-5 items-center justify-center rounded-full bg-white"
+                    :class="currentStep === step.id ? 'text-igp-blue' : store.isCompleted(step.id) ? 'text-emerald-600' : 'text-igp-black-950/10'">
                     {{ step.id }}
                   </span>
                   <span>PASO {{ step.id }}: {{ step.shortTitle }}</span>
                 </div>
-                <span v-if="index < steps.length - 1" class="h-px min-w-5 flex-1 bg-slate-300" />
+                <span v-if="index < steps.length - 1" class="h-px min-w-4 flex-1 bg-slate-300" />
               </template>
             </nav>
           </div>
@@ -80,8 +80,8 @@ function handleNextStep() {
         <div class="flex-1 min-h-0 flex">
           <aside v-if="currentStep === 1" class="hidden lg:flex w-52 xl:w-85 shrink-0 flex-col border-r border-slate-200 bg-white">
             <div class="px-3 pt-3 pb-2">
-              <h2 class="text-xs font-semibold text-igp-blue">Historial de eventos</h2>
-              <p class="mt-1 text-[9px] text-slate-400">{{ records.length }} registros disponibles</p>
+              <h2 class="text-sm sm:text-base font-semibold text-igp-blue">Historial de eventos</h2>
+              <p class="mt-1 text-[10px] text-slate-400">{{ records.length }} registros disponibles</p>
             </div>
             <div class="flex-1 overflow-y-auto px-2 pb-3 space-y-2">
               <button v-for="record in records" :key="record.id" class="w-full rounded-lg border p-2 text-left transition-all"
@@ -96,9 +96,9 @@ function handleNextStep() {
                     <p class="truncate  text-xs sm:text-sm font-semibold text-slate-800">{{ record.title }}</p>
                     <p class="event-date text-xs text-igp-black-950">{{ record.info.dateTime }}</p>
                   </div>
-                  <span class="flex h-18 w-8 shrink-0 items-center justify-center rounded-md transition-colors"
-                    :class="selectedQuake?.id === record.id ? 'bg-igp-blue text-white' : 'text-transparent'">
-                    <AppIcon name="arrow2" :size="18" />
+                  <span class="flex h-6 w-6 shrink-0 items-center justify-center transition-colors"
+                    :class="selectedQuake?.id === record.id ? 'text-igp-blue' : 'text-transparent'">
+                    <AppIcon name="arrow2" :size="26" class="fill-current stroke-0" />
                   </span>
                 </div>
               </button>
@@ -118,7 +118,7 @@ function handleNextStep() {
 
             <SeismicDetailTabs v-if="currentStep === 1" :record="selectedQuake" @next-step="handleNextStep"
               @select-record="selectQuake" class="flex-1 min-h-0" />
-            <div v-else ref="mainContentRef" class="flex-1 overflow-y-auto">
+            <div v-else ref="mainContentRef" class="report-step-content flex-1 overflow-y-auto">
               <slot />
             </div>
           </main>
@@ -128,6 +128,22 @@ function handleNextStep() {
   </div>
 </template>
 
+<style>
+.report-step-content h1,
+.report-step-content h2,
+.report-step-content h3,
+.report-step-content h4 {
+  color: #222222 !important;
+}
+
+.report-step-content h1 + p,
+.report-step-content h2 + p,
+.report-step-content h3 + p,
+.report-step-content h4 + p {
+  color: #222222 !important;
+}
+</style>
+
 <style scoped>
 .step-pill { white-space: nowrap; }
 
@@ -135,6 +151,7 @@ function handleNextStep() {
   display: -webkit-box;
   line-height: 1.2;
   overflow: hidden;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }

@@ -59,7 +59,7 @@ function goBack() {
 }
 
 async function finishReport() {
-  store.markCompleted(8)
+  store.markCompleted(5)
   await Swal.fire({
     title: '¡Reporte completado!',
     html: `
@@ -80,14 +80,14 @@ async function finishReport() {
     <!-- Header -->
     <div class="mb-6 flex items-start justify-between flex-wrap gap-4">
       <div>
-        <span class="inline-block px-3 py-1 bg-igp-blue-50 text-igp-blue text-xs font-bold uppercase tracking-wider rounded-full mb-3">
-          Paso 8
+        <span class="inline-block px-3 py-1 bg-igp-green-50 text-igp-green-800 text-xs font-bold uppercase tracking-wider rounded-full mb-3">
+          Resultado final
         </span>
         <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-igp-blue mb-2">
-          Reporte Sísmico
+          Reporte sísmico completado
         </h1>
         <p class="text-sm text-gray-500" v-if="selectedRecord">
-          {{ selectedRecord.title }} — Resumen final del análisis
+          Felicitaciones, el reporte de {{ selectedRecord.title }} se generó correctamente.
         </p>
       </div>
       <div class="flex gap-2">
@@ -109,8 +109,11 @@ async function finishReport() {
 
       <div class="relative">
         <div class="flex items-center gap-3 mb-4">
+          <div class="h-12 w-12 rounded-2xl bg-igp-green-700 flex items-center justify-center shadow-lg shadow-black/10">
+            <AppIcon name="check" :size="26" class="text-white" />
+          </div>
           <div>
-            <p class="text-lg font-bold">Reporte Sísmico</p>
+            <p class="text-lg font-bold">Buen trabajo, reporte sísmico finalizado</p>
             <p class="text-xs text-gray-300">Instituto Geofísico del Perú — Operador Sísmico</p>
           </div>
         </div>

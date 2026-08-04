@@ -117,7 +117,7 @@ async function renderChart() {
   const layout = {
     title: {
       text: 'Gráfico S-P vs Distancia Epicentral',
-      font: { size: 16, color: '#00214f', family: 'Poppins' },
+      font: { size: 16, color: '#222222', family: 'Poppins' },
     },
     xaxis: {
       title: { text: 'Distancia Epicentral (km)', font: { size: 13, family: 'Poppins' } },

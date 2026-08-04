@@ -136,7 +136,7 @@ function renderSingleChart(data, idx) {
   const layout = {
     title: {
       text: `Estación ${data.stationName}`,
-      font: { size: 14, color: '#0032ff', family: 'Poppins' },
+      font: { size: 14, color: '#222222', family: 'Poppins' },
     },
     xaxis: {
       title: { text: 'Tiempo (s)', font: { size: 11 } },
